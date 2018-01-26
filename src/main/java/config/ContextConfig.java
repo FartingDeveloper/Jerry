@@ -1,6 +1,8 @@
 package config;
 
 import loader.ContextLoader;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -14,6 +16,8 @@ import java.util.List;
 @Configuration
 public class ContextConfig {
 
+    private Logger logger = LogManager.getLogger("config.ContextConfig");
+
     private static final String WEBAPPS = "\\webapps";
 
     @Bean
@@ -23,7 +27,7 @@ public class ContextConfig {
         try {
             jar = new File(ContextConfig.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
         } catch (URISyntaxException e) {
-            e.printStackTrace();    //LOG4J
+            logger.error("Root path can't be found.");
             throw new BeanCreationException("Root path can't be found.");
         }
         return jar.getParent();
