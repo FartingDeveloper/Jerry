@@ -1,10 +1,10 @@
 package config;
 
 import loader.ContextLoader;
+import loader.Loader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.BeanCreationException;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -18,10 +18,9 @@ public class ContextConfig {
 
     private Logger logger = LogManager.getLogger("config.ContextConfig");
 
-    private static final String WEBAPPS = "\\webapps";
+    private static final String WEBAPPS = "webapps";
 
     @Bean
-    @Qualifier("rootPath")
     public String rootPath(){
         File jar = null;
         try {
@@ -34,13 +33,13 @@ public class ContextConfig {
     }
 
     @Bean
-    public ContextLoader contextLoader(){
+    public Loader<ServletContext> contextLoader(){
         return new ContextLoader();
     }
 
     @Bean
-    public List<ServletContext> contexts(ContextLoader loader, @Qualifier("rootPath") String rootPath){
-        return loader.load(rootPath + WEBAPPS);
+    public List<ServletContext> contexts(Loader<ServletContext> loader, String rootPath){
+        return loader.load(rootPath + File.separator + WEBAPPS);
     }
 
 }
