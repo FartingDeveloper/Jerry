@@ -2,17 +2,22 @@ package loader;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.BeanCreationException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-import servlet.WarContext;
 
+import javax.servlet.Filter;
+import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -21,12 +26,17 @@ public class ContextLoader implements Loader<ServletContext> {
 
     private static final String WEB_INF = "WEB-INF";
     private static final String WEB_XML = "web.xml";
+    private static final String LIB = "lib";
+    private static final String CLASSES = "classes";
 
     private Map<String, String> contextParams;
-    private Map<String, InfoNode> servlets;
-    private Map<String, InfoNode> filters;
+    private Map<String, InfoNode<Servlet>> servlets;
+    private Map<String, InfoNode<Filter>> filters;
     private Map<String, String> servletsMapping;
     private Map<String, String> filtersMapping;
+    private Set<String> resources;
+
+    private ClassLoader classLoader;
 
     private Logger logger = LogManager.getLogger("loader.ContextLoader");
 
@@ -39,46 +49,75 @@ public class ContextLoader implements Loader<ServletContext> {
         File webapps = new File(path);
 
         for (File file : webapps.listFiles()){
-            WarContext context = createContext(file);
-            contexts.add(context);
+            try {
+                ServletContext context = createContext(file);
+                contexts.add(context);
+            } catch (ClassNotFoundException e) {
+                logger.error("Class loading error.");
+                throw new BeanCreationException(e.toString());
+            }
         }
 
         return contexts;
     }
 
-    private WarContext createContext(File file){
+    private ServletContext createContext(File file) throws ClassNotFoundException {
         logger.debug("Creating context:" + file.getName());
+
         contextParams = new HashMap<>();
         servlets = new HashMap<>();
         filters = new HashMap<>();
+        servletsMapping = new HashMap<>();
+        filtersMapping = new HashMap<>();
+        resources = new HashSet<>();
 
-        parseWebXml(file);
-        loadJars(file);
-        loadClasses(file);
-        loadResources(file);
+        File jars = new File(file.getAbsolutePath() + File.separator + WEB_INF + File.separator + LIB);
+        File classes = new File(file.getAbsolutePath() + File.separator + WEB_INF + File.separator + CLASSES);
+        classLoader = loadClasses(jars, classes);
 
-        
+        File resources = new File(file.getAbsolutePath() + File.separator + WEB_INF);
+        loadResources(resources);
+
+        File webXml = new File(file.getAbsolutePath() + File.separator + WEB_INF + File.separator + WEB_XML);
+        parseWebXml(webXml);
+
+        //ServletContext context = new JerryServletContext();
 
         return null;
     }
 
-    private void loadResources(File file){
+    private void loadResources(File resources){
 
     }
 
-    private void loadClasses(File file){
+    private ClassLoader loadClasses(File jars, File classes){
+        URLClassLoader loader = null;
 
+        File[] files = jars.listFiles();
+        int size = files.length + 1;
+
+        try {
+            URL[] urls = new URL[files.length + 1];
+            urls[size - 1] = new URL(classes.getAbsolutePath());
+
+            for(int i = 0; i < size - 1; i++){
+                urls[i] = new URL(files[i].getAbsolutePath());
+            }
+
+            loader = new URLClassLoader(urls, this.getClass().getClassLoader());
+        } catch (MalformedURLException e) {
+            logger.error("Failed to load jars and classes.");
+            throw new BeanCreationException(e.toString());
+        }
+        return loader;
     }
 
-    private void loadJars(File file){
-
-    }
-
-    private void parseWebXml(File file){
+    private void parseWebXml(File file) throws ClassNotFoundException {
         logger.debug("Parsing web.xml from:" + file.getName());
+
         try {
             DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-            Document web = documentBuilder.parse(file.getAbsolutePath() + File.separator + WEB_INF + File.separator + WEB_XML);
+            Document web = documentBuilder.parse(file);
 
             Node root = web.getDocumentElement();
             NodeList childNodes = root.getChildNodes();
@@ -118,10 +157,10 @@ public class ContextLoader implements Loader<ServletContext> {
         }
     }
 
-    private void collectClasses(Node obj, Map<String, InfoNode> map){
+    private <T> void collectClasses(Node obj, Map<String, InfoNode<T>> map) throws ClassNotFoundException {
         NodeList params = obj.getChildNodes();
         String name = null;
-        String clazz = null;
+        Class<T> clazz = null;
         Map<String, String> initParams = new HashMap<>();
 
         for (int j = 0; j < params.getLength(); j++){
@@ -133,7 +172,7 @@ public class ContextLoader implements Loader<ServletContext> {
             }
 
             if(node.getNodeName().contains("-class")){
-                clazz = node.getNodeValue();
+                clazz = (Class<T>) classLoader.loadClass(node.getNodeValue());
                 continue;
             }
 
@@ -143,7 +182,7 @@ public class ContextLoader implements Loader<ServletContext> {
             }
 
         }
-        map.put(name, new InfoNode(clazz, initParams));
+        map.put(name, new InfoNode<>(clazz, initParams));
     }
 
     private void collectParams(Node parameters, Map<String, String> map){
@@ -217,17 +256,17 @@ public class ContextLoader implements Loader<ServletContext> {
         return outputPath.substring(0, outputPath.lastIndexOf(warName));
     }
 
-    private class InfoNode {
+    private class InfoNode<T> {
 
-        private String clazz;
+        private Class<T> clazz;
         private Map<String, String> params;
 
-        public InfoNode(String clazz, Map<String, String> params){
+        public InfoNode(Class<T> clazz, Map<String, String> params){
             this.clazz = clazz;
             this.params = params;
         }
 
-        public String getClazz() {
+        public Class<T> getClazz() {
             return clazz;
         }
 
@@ -236,4 +275,7 @@ public class ContextLoader implements Loader<ServletContext> {
         }
     }
 
+    private class AnnotationScanner {
+
+    }
 }

@@ -18,7 +18,7 @@ public class ContextConfig {
 
     private Logger logger = LogManager.getLogger("config.ContextConfig");
 
-    private static final String WEBAPPS = "webapps";
+    private static final String WEB_APPS = "webapps";
 
     @Bean
     public String rootPath(){
@@ -39,7 +39,7 @@ public class ContextConfig {
 
     @Bean
     public List<ServletContext> contexts(Loader<ServletContext> loader, String rootPath){
-        return loader.load(rootPath + File.separator + WEBAPPS);
+        return loader.load(rootPath + File.separator + WEB_APPS);
     }
 
 }

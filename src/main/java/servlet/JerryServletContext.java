@@ -10,16 +10,28 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 
-public class WarContext implements ServletContext {
+public class JerryServletContext implements ServletContext {
 
     private static final String WEB_INF = "\\WEB-INF";
     private static final String WEB_XML = "\\web.xml";
 
-    private Set<String> resourcesPath = new HashSet<String>();
-    private Enumeration<String> servlets;
+    private String contextPath;
+    private Map<String, ? extends  ServletRegistration> servletRegistrations;
+    private Map<String, ? extends  FilterRegistration> filterRegistrations;
+    private Set<String> resourcePaths;
+    private List<ServletContext> contexts;
+    private ClassLoader classLoader;
 
-    public WarContext(File war){
-
+    public JerryServletContext(String contextPath, Map<String, String> contextParameters,
+                               Map<String, ? extends ServletRegistration> servletRegistrations,
+                               Map<String, ? extends FilterRegistration> filterRegistrations,
+                               Set<String> resourcePaths, List<ServletContext> contexts, ClassLoader classLoader){
+        this.contextPath = contextPath;
+        this.servletRegistrations = servletRegistrations;
+        this.filterRegistrations = filterRegistrations;
+        this.resourcePaths = resourcePaths;
+        this.contexts = contexts;
+        this.classLoader = classLoader;
     }
 
     public String getContextPath() {
@@ -27,7 +39,7 @@ public class WarContext implements ServletContext {
     }
 
     public ServletContext getContext(String uripath) {
-        throw new UnsupportedOperationException();
+        return null;
     }
 
     public int getMajorVersion() {
