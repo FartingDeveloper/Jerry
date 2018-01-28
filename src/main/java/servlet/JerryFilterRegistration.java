@@ -8,9 +8,6 @@ import java.util.Map;
 import java.util.Set;
 
 public class JerryFilterRegistration implements FilterRegistration {
-
-    
-
     @Override
     public void addMappingForServletNames(EnumSet<DispatcherType> dispatcherTypes, boolean isMatchAfter, String... servletNames) {
 

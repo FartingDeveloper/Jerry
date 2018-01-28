@@ -1,6 +1,8 @@
 package servlet;
 
 
+import org.apache.logging.log4j.LogManager;
+
 import javax.activation.MimetypesFileTypeMap;
 import javax.servlet.*;
 import javax.servlet.descriptor.JspConfigDescriptor;
@@ -9,37 +11,54 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
+import java.util.regex.Pattern;
 
 public class JerryServletContext implements ServletContext {
-
-    private static final String WEB_INF = "\\WEB-INF";
-    private static final String WEB_XML = "\\web.xml";
 
     private String contextPath;
     private Map<String, ? extends  ServletRegistration> servletRegistrations;
     private Map<String, ? extends  FilterRegistration> filterRegistrations;
     private Set<String> resourcePaths;
-    private List<ServletContext> contexts;
+    private Map<String, String> initParameters;
+    private Map<String, ServletContext> contexts;
     private ClassLoader classLoader;
+
+    private Map<String, Object> attributes = new HashMap<>();
+
+    private org.apache.logging.log4j.Logger logger = LogManager.getLogger("loader.JerryServletContext");
+
+    public JerryServletContext(Map<String, String> contextParameters,
+                               Map<String, ? extends ServletRegistration> servletRegistrations,
+                               Map<String, ? extends FilterRegistration> filterRegistrations,
+                               Set<String> resourcePaths, Map<String, String> initParameters, Map<String, ServletContext> contexts, ClassLoader classLoader){
+        this.contextPath = "";
+        this.servletRegistrations = servletRegistrations;
+        this.filterRegistrations = filterRegistrations;
+        this.resourcePaths = resourcePaths;
+        this.initParameters = initParameters;
+        this.contexts = contexts;
+        this.classLoader = classLoader;
+    }
 
     public JerryServletContext(String contextPath, Map<String, String> contextParameters,
                                Map<String, ? extends ServletRegistration> servletRegistrations,
                                Map<String, ? extends FilterRegistration> filterRegistrations,
-                               Set<String> resourcePaths, List<ServletContext> contexts, ClassLoader classLoader){
+                               Set<String> resourcePaths, Map<String, String> initParameters, Map<String, ServletContext> contexts, ClassLoader classLoader){
         this.contextPath = contextPath;
         this.servletRegistrations = servletRegistrations;
         this.filterRegistrations = filterRegistrations;
         this.resourcePaths = resourcePaths;
+        this.initParameters = initParameters;
         this.contexts = contexts;
         this.classLoader = classLoader;
     }
 
     public String getContextPath() {
-        return "";
+        return contextPath;
     }
 
     public ServletContext getContext(String uripath) {
-        return null;
+        return contexts.get(uripath);
     }
 
     public int getMajorVersion() {
@@ -59,18 +78,39 @@ public class JerryServletContext implements ServletContext {
     }
 
     public String getMimeType(String file) {
-        File f = new File(file);
-        return new MimetypesFileTypeMap().getContentType(f);
+        String mimetype = null;
+        for(String path : resourcePaths){
+            if(path.contains(File.pathSeparator + file)){
+                mimetype = new MimetypesFileTypeMap().getContentType(path);
+            }
+        }
+        return mimetype;
     }
 
     public Set<String> getResourcePaths(String path) {
-        Set<String> set = new HashSet<String>();
+        Set<String> paths = new HashSet<>();
 
-        return set;
+        Pattern pattern = Pattern.compile(path + "(\\" + File.pathSeparator + "| ^)");
+        for(String resource : resourcePaths){
+            if(pattern.matcher(resource).find()){
+                paths.add(resource);
+            }
+        }
+
+        if (path.isEmpty()){
+            return null;
+        }
+        return paths;
     }
 
     public URL getResource(String path) throws MalformedURLException {
-        return null;
+        URL url = null;
+        for(String resource : resourcePaths){
+            if (resource == path){
+                url = new URL(resource);
+            }
+        }
+        return url;
     }
 
     public InputStream getResourceAsStream(String path) {
@@ -98,15 +138,15 @@ public class JerryServletContext implements ServletContext {
     }
 
     public void log(String msg) {
-
+        logger.info(msg);
     }
 
     public void log(Exception exception, String msg) {
-
+        log(msg, exception);
     }
 
     public void log(String message, Throwable throwable) {
-
+        logger.error(message + throwable.getStackTrace());
     }
 
     public String getRealPath(String path) {
@@ -114,35 +154,63 @@ public class JerryServletContext implements ServletContext {
     }
 
     public String getServerInfo() {
-        return null;
+        return "Jerry";
     }
 
     public String getInitParameter(String name) {
-        return null;
+        return initParameters.get(name);
     }
 
     public Enumeration<String> getInitParameterNames() {
-        return null;
+        return new Enumeration<String>() {
+
+            Iterator<String> parameterNames = initParameters.keySet().iterator();
+
+            @Override
+            public boolean hasMoreElements() {
+                return parameterNames.hasNext();
+            }
+
+            @Override
+            public String nextElement() {
+                return parameterNames.next();
+            }
+        };
     }
 
     public boolean setInitParameter(String name, String value) {
-        return false;
+        boolean result = initParameters.containsKey(name);
+        initParameters.put(name, value);
+        return result;
     }
 
     public Object getAttribute(String name) {
-        return null;
+        return attributes.get(name);
     }
 
     public Enumeration<String> getAttributeNames() {
-        return null;
+        return new Enumeration<String>() {
+
+            Iterator<String> attributeNames = attributes.keySet().iterator();
+
+            @Override
+            public boolean hasMoreElements() {
+                return attributeNames.hasNext();
+            }
+
+            @Override
+            public String nextElement() {
+                return attributeNames.next();
+            }
+        };
     }
 
     public void setAttribute(String name, Object object) {
-
+        attributes.put(name, object);
     }
 
     public void removeAttribute(String name) {
-
+        attributes.remove(name);
     }
 
     public String getServletContextName() {
@@ -170,7 +238,7 @@ public class JerryServletContext implements ServletContext {
     }
 
     public ServletRegistration getServletRegistration(String servletName) {
-        return null;
+        return servletRegistrations.get(servletName);
     }
 
     public Map<String, ? extends ServletRegistration> getServletRegistrations() {
@@ -238,7 +306,7 @@ public class JerryServletContext implements ServletContext {
     }
 
     public ClassLoader getClassLoader() {
-        return null;
+        return classLoader;
     }
 
     public void declareRoles(String... roleNames) {

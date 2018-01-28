@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import javax.servlet.ServletContext;
 import java.io.File;
 import java.net.URISyntaxException;
-import java.util.List;
+import java.util.Map;
 
 @Configuration
 public class ContextConfig {
@@ -33,13 +33,13 @@ public class ContextConfig {
     }
 
     @Bean
-    public Loader<ServletContext> contextLoader(){
+    public Loader<Map<String, ServletContext>> contextLoader(){
         return new ContextLoader();
     }
 
     @Bean
-    public List<ServletContext> contexts(Loader<ServletContext> loader, String rootPath){
-        return loader.load(rootPath + File.separator + WEB_APPS);
+    public Map<String, ServletContext> contexts(Loader<Map<String, ServletContext>> loader, String rootPath){
+        return loader.load(rootPath + File.pathSeparator + WEB_APPS);
     }
 
 }

@@ -22,7 +22,7 @@ import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-public class ContextLoader implements Loader<ServletContext> {
+public class ContextLoader implements Loader<Map<String, ServletContext>> {
 
     private static final String WEB_INF = "WEB-INF";
     private static final String WEB_XML = "web.xml";
@@ -40,9 +40,9 @@ public class ContextLoader implements Loader<ServletContext> {
 
     private Logger logger = LogManager.getLogger("loader.ContextLoader");
 
-    public List<ServletContext> load(String path) {
+    public Map<String, ServletContext> load(String path) {
         logger.debug("Loading contexts.");
-        List<ServletContext> contexts = new LinkedList<ServletContext>();
+        Map<String, ServletContext> contexts = new HashMap<>();
 
         unzipWars(path);
 
@@ -51,7 +51,7 @@ public class ContextLoader implements Loader<ServletContext> {
         for (File file : webapps.listFiles()){
             try {
                 ServletContext context = createContext(file);
-                contexts.add(context);
+                contexts.put(file.getName(), context);
             } catch (ClassNotFoundException e) {
                 logger.error("Class loading error.");
                 throw new BeanCreationException(e.toString());
@@ -71,14 +71,14 @@ public class ContextLoader implements Loader<ServletContext> {
         filtersMapping = new HashMap<>();
         resources = new HashSet<>();
 
-        File jars = new File(file.getAbsolutePath() + File.separator + WEB_INF + File.separator + LIB);
-        File classes = new File(file.getAbsolutePath() + File.separator + WEB_INF + File.separator + CLASSES);
+        File jars = new File(file.getAbsolutePath() + File.pathSeparator + WEB_INF + File.pathSeparator + LIB);
+        File classes = new File(file.getAbsolutePath() + File.pathSeparator + WEB_INF + File.pathSeparator + CLASSES);
         classLoader = loadClasses(jars, classes);
 
-        File resources = new File(file.getAbsolutePath() + File.separator + WEB_INF);
+        File resources = new File(file.getAbsolutePath() + File.pathSeparator + WEB_INF);
         loadResources(resources);
 
-        File webXml = new File(file.getAbsolutePath() + File.separator + WEB_INF + File.separator + WEB_XML);
+        File webXml = new File(file.getAbsolutePath() + File.pathSeparator + WEB_INF + File.pathSeparator + WEB_XML);
         parseWebXml(webXml);
 
         //ServletContext context = new JerryServletContext();
@@ -231,7 +231,7 @@ public class ContextLoader implements Loader<ServletContext> {
 
         while (entries.hasMoreElements()){
             JarEntry entry = entries.nextElement();
-            File file = new File(outputDirName + File.separator + entry.getName());
+            File file = new File(outputDirName + File.pathSeparator + entry.getName());
             new File(file.getParent()).mkdirs(); //sub directories
 
             try(InputStream in = war.getInputStream(entry); OutputStream out = new FileOutputStream(file)) {
