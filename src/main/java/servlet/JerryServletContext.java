@@ -3,6 +3,7 @@ package servlet;
 
 import org.apache.logging.log4j.LogManager;
 
+import javax.activation.MimeType;
 import javax.activation.MimetypesFileTypeMap;
 import javax.servlet.*;
 import javax.servlet.descriptor.JspConfigDescriptor;
@@ -17,10 +18,14 @@ import java.util.regex.Pattern;
 
 public class JerryServletContext implements ServletContext {
 
+    private boolean initialized;
+
     private String contextPath;
     private Map<String, JerryServletRegistration> servletRegistrations;
     private Map<String, JerryFilterRegistration> filterRegistrations;
+    private Map<String, EventListener> listeners;
     private Set<String> resourcePaths;
+    private Map<String, MimeType> mimeTypes;
     private Map<String, String> initParameters;
     private Map<String, ServletContext> contexts;
     private ClassLoader classLoader;
@@ -31,12 +36,14 @@ public class JerryServletContext implements ServletContext {
 
     public JerryServletContext(Map<String, String> contextParameters,
                                Map<String, JerryServletRegistration> servletRegistrations,
-                               Map<String, JerryFilterRegistration> filterRegistrations,
-                               Set<String> resourcePaths, Map<String, String> initParameters, Map<String, ServletContext> contexts, ClassLoader classLoader){
+                               Map<String, JerryFilterRegistration> filterRegistrations, Map<String, EventListener> listeners,
+                               Set<String> resourcePaths, Map<String, MimeType> mimeTypes, Map<String, String> initParameters, Map<String, ServletContext> contexts, ClassLoader classLoader){
         this.contextPath = "";
         this.servletRegistrations = servletRegistrations;
         this.filterRegistrations = filterRegistrations;
+        this.listeners = listeners;
         this.resourcePaths = resourcePaths;
+        this.mimeTypes = mimeTypes;
         this.initParameters = initParameters;
         this.contexts = contexts;
         this.classLoader = classLoader;
@@ -44,12 +51,14 @@ public class JerryServletContext implements ServletContext {
 
     public JerryServletContext(String contextPath, Map<String, String> contextParameters,
                                Map<String, JerryServletRegistration> servletRegistrations,
-                               Map<String, JerryFilterRegistration> filterRegistrations,
-                               Set<String> resourcePaths, Map<String, String> initParameters, Map<String, ServletContext> contexts, ClassLoader classLoader){
+                               Map<String, JerryFilterRegistration> filterRegistrations, Map<String, EventListener> listeners,
+                               Set<String> resourcePaths, Map<String, MimeType> mimeTypes, Map<String, String> initParameters, Map<String, ServletContext> contexts, ClassLoader classLoader){
         this.contextPath = contextPath;
         this.servletRegistrations = servletRegistrations;
         this.filterRegistrations = filterRegistrations;
+        this.listeners = listeners;
         this.resourcePaths = resourcePaths;
+        this.mimeTypes = mimeTypes;
         this.initParameters = initParameters;
         this.contexts = contexts;
         this.classLoader = classLoader;
@@ -68,7 +77,7 @@ public class JerryServletContext implements ServletContext {
     }
 
     public int getMinorVersion() {
-        return 0;
+        return 4;
     }
 
     public int getEffectiveMajorVersion() {
@@ -76,17 +85,11 @@ public class JerryServletContext implements ServletContext {
     }
 
     public int getEffectiveMinorVersion() {
-        return 0;
+        return 4;
     }
 
     public String getMimeType(String file) {
-        String mimetype = null;
-        for(String resource : resourcePaths){
-            if(comparePaths(file, resource)){
-                mimetype = new MimetypesFileTypeMap().getContentType(resource);
-            }
-        }
-        return mimetype;
+        return mimeTypes.get(file).toString();
     }
 
     public Set<String> getResourcePaths(String path) {
@@ -200,6 +203,7 @@ public class JerryServletContext implements ServletContext {
     }
 
     public String getInitParameter(String name) {
+        if(name == null) throw new NullPointerException();
         return initParameters.get(name);
     }
 
@@ -221,12 +225,17 @@ public class JerryServletContext implements ServletContext {
     }
 
     public boolean setInitParameter(String name, String value) {
+        if(initialized) throw new IllegalStateException();
+
+        if(name == null) throw new NullPointerException();
+
         boolean result = initParameters.containsKey(name);
         initParameters.put(name, value);
         return result;
     }
 
     public Object getAttribute(String name) {
+        if(name == null) throw new NullPointerException();
         return attributes.get(name);
     }
 
@@ -248,6 +257,7 @@ public class JerryServletContext implements ServletContext {
     }
 
     public void setAttribute(String name, Object object) {
+        if(name == null) throw new NullPointerException();
         attributes.put(name, object);
     }
 
@@ -260,15 +270,21 @@ public class JerryServletContext implements ServletContext {
     }
 
     public ServletRegistration.Dynamic addServlet(String servletName, String className) {
-        return null;
+        check(servletName);
+        JerryServletRegistrationDynamic servletRegistrationDynamic = new JerryServletRegistrationDynamic(servletName, className);
+        servletRegistrations.put(servletName, servletRegistrationDynamic);
+        return servletRegistrationDynamic;
     }
 
     public ServletRegistration.Dynamic addServlet(String servletName, Servlet servlet) {
-        return null;
+        check(servletName);
+        JerryServletRegistrationDynamic servletRegistrationDynamic = new JerryServletRegistrationDynamic(servletName, servlet);
+        servletRegistrations.put(servletName, servletRegistrationDynamic);
+        return servletRegistrationDynamic;
     }
 
     public ServletRegistration.Dynamic addServlet(String servletName, Class<? extends Servlet> servletClass) {
-        return null;
+        return addServlet(servletName, servletClass.getName());
     }
 
     public ServletRegistration.Dynamic addJspFile(String servletName, String jspFile) {
@@ -276,6 +292,7 @@ public class JerryServletContext implements ServletContext {
     }
 
     public <T extends Servlet> T createServlet(Class<T> clazz) throws ServletException {
+
         return null;
     }
 
@@ -284,19 +301,23 @@ public class JerryServletContext implements ServletContext {
     }
 
     public Map<String, ? extends ServletRegistration> getServletRegistrations() {
-        return null;
+        return servletRegistrations;
     }
 
     public FilterRegistration.Dynamic addFilter(String filterName, String className) {
-        return null;
+        check(filterName);
+
+        JerryFilterRegistrationDynamic filterRegistrationDynamic = new JerryFilterRegistrationDynamic(filterName, className);
+        filterRegistrations.put(filterName, filterRegistrationDynamic);
+        return filterRegistrationDynamic;
     }
 
     public FilterRegistration.Dynamic addFilter(String filterName, Filter filter) {
-        return null;
+        return addFilter(filterName, filter.getClass().getName());
     }
 
     public FilterRegistration.Dynamic addFilter(String filterName, Class<? extends Filter> filterClass) {
-        return null;
+        return addFilter(filterName, filterClass.getName());
     }
 
     public <T extends Filter> T createFilter(Class<T> clazz) throws ServletException {
@@ -381,5 +402,12 @@ public class JerryServletContext implements ServletContext {
 
     public void setResponseCharacterEncoding(String encoding) {
 
+    }
+
+    private void check(String name){
+        if(initialized) throw new IllegalStateException();
+
+        if(name == null) throw new IllegalArgumentException();
+        else if(name.isEmpty()) throw new IllegalArgumentException();
     }
 }

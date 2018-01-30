@@ -6,38 +6,30 @@ import javax.servlet.*;
 import java.io.IOException;
 import java.util.*;
 
-public class JerryServletRegistration implements ServletRegistration {
+public class JerryServletRegistration extends JerryRegistration implements ServletRegistration {
 
-    private String servletName;
-    private String servletClassName;
-    private Map<String, String> initParameters;
     private Set<String> mappings;
 
-    private Map<ServletContext, JerryServletConfig> cache;
+    private String role;
 
-    private org.apache.logging.log4j.Logger logger = LogManager.getLogger("servlet.JerryServletRegistration");
+    protected Map<ServletContext, JerryServletConfig> cache;
+
+    protected org.apache.logging.log4j.Logger logger = LogManager.getLogger("servlet.JerryServletRegistration");
 
     public JerryServletRegistration(String servletName, String servletClassName){
-        this.servletName = servletName;
-        this.servletClassName = servletClassName;
-        initParameters = new HashMap<>();
+        super(servletName, servletClassName);
         mappings = new HashSet<>();
         cache = new HashMap<>();
     }
 
     public JerryServletRegistration(String servletName, String servletClassName, Map<String, String> initParameters){
-        this(servletName, servletClassName);
-        this.initParameters = initParameters;
-    }
-
-    public JerryServletRegistration(String servletName, String servletClassName, Set<String> mappings){
-        this(servletName, servletClassName);
-        this.mappings = mappings;
+        super(servletName, servletClassName, initParameters);
+        mappings = new HashSet<>();
+        cache = new HashMap<>();
     }
 
     public JerryServletRegistration(String servletName, String servletClassName, Map<String, String> initParameters, Set<String> mappings){
-        this(servletName, servletClassName);
-        this.initParameters = initParameters;
+        this(servletName, servletClassName, initParameters);
         this.mappings = mappings;
     }
 
@@ -59,39 +51,6 @@ public class JerryServletRegistration implements ServletRegistration {
         return null;
     }
 
-    @Override
-    public String getName() {
-        return servletName;
-    }
-
-    @Override
-    public String getClassName() {
-        return servletClassName;
-    }
-
-    @Override
-    public boolean setInitParameter(String name, String value) {
-        boolean result = initParameters.containsKey(name);
-        initParameters.put(name, value);
-        return result;
-    }
-
-    @Override
-    public String getInitParameter(String name) {
-        return initParameters.get(name);
-    }
-
-    @Override
-    public Set<String> setInitParameters(Map<String, String> initParameters) {
-        initParameters.putAll(initParameters);
-        return initParameters.keySet();
-    }
-
-    @Override
-    public Map<String, String> getInitParameters() {
-        return initParameters;
-    }
-
     public JerryServletConfig getJerryServletConfig(ServletContext context){
         if(cache.get(context) == null){
             cache.put(context, new JerryServletConfig(context));
@@ -105,7 +64,7 @@ public class JerryServletRegistration implements ServletRegistration {
         try {
             requestDispatcher = config.getJerryRequestDispatcher();
         } catch (ClassNotFoundException e) {
-            logger.error("Class isn't found: " + servletClassName);
+            logger.error("Class isn't found: " + className);
         } catch (InstantiationException e) {
             e.printStackTrace();
         } catch (ServletException e) {
@@ -116,7 +75,7 @@ public class JerryServletRegistration implements ServletRegistration {
         return requestDispatcher;
     }
 
-    private class JerryServletConfig implements ServletConfig{
+    protected class JerryServletConfig implements ServletConfig{
 
         private JerryRequestDispatcher requestDispatcher;
 
@@ -128,7 +87,7 @@ public class JerryServletRegistration implements ServletRegistration {
 
         @Override
         public String getServletName() {
-            return servletName;
+            return name;
         }
 
         @Override
@@ -166,15 +125,19 @@ public class JerryServletRegistration implements ServletRegistration {
             return requestDispatcher;
         }
 
-        private class JerryRequestDispatcher implements RequestDispatcher {
+        protected class JerryRequestDispatcher implements RequestDispatcher {
 
             private Servlet servlet;
 
-            private JerryRequestDispatcher() throws ClassNotFoundException, IllegalAccessException, InstantiationException, ServletException {
+            public JerryRequestDispatcher() throws ClassNotFoundException, IllegalAccessException, InstantiationException, ServletException {
                 ClassLoader classLoader = context.getClassLoader();
-                Class<Servlet> servletClass = (Class<Servlet>) classLoader.loadClass(servletClassName);
+                Class<Servlet> servletClass = (Class<Servlet>) classLoader.loadClass(className);
                 servlet = servletClass.newInstance();
                 servlet.init(JerryServletConfig.this);
+            }
+
+            public JerryRequestDispatcher(Servlet servlet){
+                this.servlet = servlet;
             }
 
             @Override

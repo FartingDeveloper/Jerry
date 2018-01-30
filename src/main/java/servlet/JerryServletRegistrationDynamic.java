@@ -1,17 +1,55 @@
 package servlet;
 
-import javax.servlet.MultipartConfigElement;
-import javax.servlet.ServletRegistration;
-import javax.servlet.ServletSecurityElement;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
+import javax.servlet.*;
+import java.io.IOException;
+import java.util.*;
 
-public class JerryServletRegistrationDynamic implements ServletRegistration.Dynamic {
+public class JerryServletRegistrationDynamic extends JerryServletRegistration implements ServletRegistration.Dynamic{
+
+    private int loadOnStartup = -1;
+    private Servlet servlet;
+
+    public JerryServletRegistrationDynamic(String servletName, String servletClassName){
+        super(servletName, servletClassName);
+    }
+
+    public JerryServletRegistrationDynamic(String servletName, Servlet servlet){
+        super(servletName, servlet.getClass().getName());
+        this.servlet = servlet;
+    }
+
+
+    public JerryServletConfig getJerryServletConfig(ServletContext context){
+        if(cache.get(context) == null){
+            cache.put(context, new JerryServletConfigDynamic(context));
+        }
+        return cache.get(context);
+    }
+
+    public JerryServletConfig.JerryRequestDispatcher getJerryRequestDispatcher(ServletContext context){
+        JerryServletConfigDynamic config = (JerryServletConfigDynamic) getJerryServletConfig(context);
+        JerryServletConfig.JerryRequestDispatcher requestDispatcher = null;
+        try {
+            if(servlet != null){
+                requestDispatcher = config.getJerryRequestDispatcher(servlet);
+            }else{
+                requestDispatcher = config.getJerryRequestDispatcher();
+            }
+        } catch (ClassNotFoundException e) {
+            logger.error("Class isn't found: " + className);
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (ServletException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return requestDispatcher;
+    }
 
     @Override
     public void setLoadOnStartup(int loadOnStartup) {
-
+        this.loadOnStartup = loadOnStartup;
     }
 
     @Override
@@ -34,48 +72,19 @@ public class JerryServletRegistrationDynamic implements ServletRegistration.Dyna
 
     }
 
-    @Override
-    public Set<String> addMapping(String... urlPatterns) {
-        return null;
-    }
+    protected class JerryServletConfigDynamic extends JerryServletRegistration.JerryServletConfig{
 
-    @Override
-    public Collection<String> getMappings() {
-        return null;
-    }
+        private JerryServletRegistration.JerryServletConfig.JerryRequestDispatcher requestDispatcher;
 
-    @Override
-    public String getRunAsRole() {
-        return null;
-    }
+        public JerryServletConfigDynamic(ServletContext context) {
+            super(context);
+        }
 
-    @Override
-    public String getName() {
-        return null;
-    }
-
-    @Override
-    public String getClassName() {
-        return null;
-    }
-
-    @Override
-    public boolean setInitParameter(String name, String value) {
-        return false;
-    }
-
-    @Override
-    public String getInitParameter(String name) {
-        return null;
-    }
-
-    @Override
-    public Set<String> setInitParameters(Map<String, String> initParameters) {
-        return null;
-    }
-
-    @Override
-    public Map<String, String> getInitParameters() {
-        return null;
+        public JerryServletRegistration.JerryServletConfig.JerryRequestDispatcher getJerryRequestDispatcher(Servlet servlet) throws ClassNotFoundException, InstantiationException, ServletException, IllegalAccessException {
+            if(requestDispatcher == null){
+                requestDispatcher = new JerryServletRegistration.JerryServletConfig.JerryRequestDispatcher(servlet);
+            }
+            return requestDispatcher;
+        }
     }
 }
