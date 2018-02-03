@@ -21,12 +21,12 @@ public class JerryServletContext implements ServletContext {
     private boolean initialized;
 
     private String contextPath;
+    private Map<String, String> contextParameters;
     private Map<String, JerryServletRegistration> servletRegistrations;
     private Map<String, JerryFilterRegistration> filterRegistrations;
     private Map<String, EventListener> listeners;
     private Set<String> resourcePaths;
     private Map<String, MimeType> mimeTypes;
-    private Map<String, String> initParameters;
     private Map<String, ServletContext> contexts;
     private ClassLoader classLoader;
 
@@ -34,34 +34,49 @@ public class JerryServletContext implements ServletContext {
 
     private org.apache.logging.log4j.Logger logger = LogManager.getLogger("servlet.JerryServletContext");
 
+    public JerryServletContext(Set<String> resourcePaths, Map<String, MimeType> mimeTypes, Map<String, ServletContext> contexts, ClassLoader classLoader){
+        this.contextPath = "";
+        this.contextParameters = new HashMap<>();
+        this.servletRegistrations = new HashMap<>();
+        this.filterRegistrations = new HashMap<>();
+        this.listeners = new HashMap<>();
+        this.resourcePaths = resourcePaths;
+        this.mimeTypes = mimeTypes;
+        this.contexts = contexts;
+        this.classLoader = classLoader;
+        initialized = false;
+    }
+
     public JerryServletContext(Map<String, String> contextParameters,
                                Map<String, JerryServletRegistration> servletRegistrations,
                                Map<String, JerryFilterRegistration> filterRegistrations, Map<String, EventListener> listeners,
-                               Set<String> resourcePaths, Map<String, MimeType> mimeTypes, Map<String, String> initParameters, Map<String, ServletContext> contexts, ClassLoader classLoader){
+                               Set<String> resourcePaths, Map<String, MimeType> mimeTypes, Map<String, ServletContext> contexts, ClassLoader classLoader){
         this.contextPath = "";
+        this.contextParameters = contextParameters;
         this.servletRegistrations = servletRegistrations;
         this.filterRegistrations = filterRegistrations;
         this.listeners = listeners;
         this.resourcePaths = resourcePaths;
         this.mimeTypes = mimeTypes;
-        this.initParameters = initParameters;
         this.contexts = contexts;
         this.classLoader = classLoader;
+        initialized = true;
     }
 
     public JerryServletContext(String contextPath, Map<String, String> contextParameters,
                                Map<String, JerryServletRegistration> servletRegistrations,
                                Map<String, JerryFilterRegistration> filterRegistrations, Map<String, EventListener> listeners,
-                               Set<String> resourcePaths, Map<String, MimeType> mimeTypes, Map<String, String> initParameters, Map<String, ServletContext> contexts, ClassLoader classLoader){
+                               Set<String> resourcePaths, Map<String, MimeType> mimeTypes, Map<String, ServletContext> contexts, ClassLoader classLoader){
         this.contextPath = contextPath;
+        this.contextParameters = contextParameters;
         this.servletRegistrations = servletRegistrations;
         this.filterRegistrations = filterRegistrations;
         this.listeners = listeners;
         this.resourcePaths = resourcePaths;
         this.mimeTypes = mimeTypes;
-        this.initParameters = initParameters;
         this.contexts = contexts;
         this.classLoader = classLoader;
+        initialized = true;
     }
 
     public String getContextPath() {
@@ -204,13 +219,13 @@ public class JerryServletContext implements ServletContext {
 
     public String getInitParameter(String name) {
         if(name == null) throw new NullPointerException();
-        return initParameters.get(name);
+        return contextParameters.get(name);
     }
 
     public Enumeration<String> getInitParameterNames() {
         return new Enumeration<String>() {
 
-            Iterator<String> parameterNames = initParameters.keySet().iterator();
+            Iterator<String> parameterNames = contextParameters.keySet().iterator();
 
             @Override
             public boolean hasMoreElements() {
@@ -229,8 +244,8 @@ public class JerryServletContext implements ServletContext {
 
         if(name == null) throw new NullPointerException();
 
-        boolean result = initParameters.containsKey(name);
-        initParameters.put(name, value);
+        boolean result = contextParameters.containsKey(name);
+        contextParameters.put(name, value);
         return result;
     }
 

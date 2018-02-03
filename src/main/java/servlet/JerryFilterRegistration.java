@@ -29,7 +29,9 @@ public class JerryFilterRegistration extends JerryRegistration implements Filter
 
     @Override
     public void addMappingForServletNames(EnumSet<DispatcherType> dispatcherTypes, boolean isMatchAfter, String... servletNames) {
-
+        for (String servletName: servletNames){
+            servletNameMappings.add(servletName);
+        }
     }
 
     @Override
@@ -39,7 +41,9 @@ public class JerryFilterRegistration extends JerryRegistration implements Filter
 
     @Override
     public void addMappingForUrlPatterns(EnumSet<DispatcherType> dispatcherTypes, boolean isMatchAfter, String... urlPatterns) {
-
+        for (String url: urlPatterns){
+            mappings.add(url);
+        }
     }
 
     @Override

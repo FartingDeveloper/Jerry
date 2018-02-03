@@ -7,9 +7,10 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+import servlet.JerryFilterRegistration;
+import servlet.JerryServletContext;
+import servlet.JerryServletRegistration;
 
-import javax.servlet.Filter;
-import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -29,20 +30,21 @@ public class ContextLoader implements Loader<Map<String, ServletContext>> {
     private static final String LIB = "lib";
     private static final String CLASSES = "classes";
 
-    private Map<String, String> contextParams;
-    private Map<String, InfoNode<Servlet>> servlets;
-    private Map<String, InfoNode<Filter>> filters;
-    private Map<String, String> servletsMapping;
-    private Map<String, String> filtersMapping;
-    private Set<String> resources;
-
+    Map<String, ServletContext> contexts;
     private ClassLoader classLoader;
+    private Set<String> resources;
 
     private Logger logger = LogManager.getLogger("loader.ContextLoader");
 
+    private WebXmlParser parser = new WebXmlParser();
+
+    public ContextLoader(){
+        contexts = new HashMap<>();
+    }
+
     public Map<String, ServletContext> load(String path) {
         logger.debug("Loading contexts.");
-        Map<String, ServletContext> contexts = new HashMap<>();
+        clear();
 
         unzipWars(path);
 
@@ -50,8 +52,10 @@ public class ContextLoader implements Loader<Map<String, ServletContext>> {
 
         for (File file : webapps.listFiles()){
             try {
-                ServletContext context = createContext(file);
-                contexts.put(file.getName(), context);
+                if(! isWar(file)){
+                    ServletContext context = createContext(file);
+                    contexts.put(file.getName(), context);
+                }
             } catch (ClassNotFoundException e) {
                 logger.error("Class loading error.");
                 throw new BeanCreationException(e.toString());
@@ -61,33 +65,29 @@ public class ContextLoader implements Loader<Map<String, ServletContext>> {
         return contexts;
     }
 
+    private void clear(){
+        contexts.clear();
+    }
+
     private ServletContext createContext(File file) throws ClassNotFoundException {
         logger.debug("Creating context:" + file.getName());
-
-        contextParams = new HashMap<>();
-        servlets = new HashMap<>();
-        filters = new HashMap<>();
-        servletsMapping = new HashMap<>();
-        filtersMapping = new HashMap<>();
-        resources = new HashSet<>();
 
         File jars = new File(file.getAbsolutePath() + File.pathSeparator + WEB_INF + File.pathSeparator + LIB);
         File classes = new File(file.getAbsolutePath() + File.pathSeparator + WEB_INF + File.pathSeparator + CLASSES);
         classLoader = loadClasses(jars, classes);
 
-        File resources = new File(file.getAbsolutePath() + File.pathSeparator + WEB_INF);
-        loadResources(resources);
+        File resourcesPath = new File(file.getAbsolutePath() + File.pathSeparator + WEB_INF);
+        resources = loadResources(resourcesPath);
 
         File webXml = new File(file.getAbsolutePath() + File.pathSeparator + WEB_INF + File.pathSeparator + WEB_XML);
-        parseWebXml(webXml);
+        logger.debug("Parsing web.xml from:" + file.getName());
 
-        //ServletContext context = new JerryServletContext();
-
-        return null;
+        return parser.parseWebXml(webXml);
     }
 
-    private void loadResources(File resources){
+    private Set<String> loadResources(File resources){
 
+        return null;
     }
 
     private ClassLoader loadClasses(File jars, File classes){
@@ -110,86 +110,6 @@ public class ContextLoader implements Loader<Map<String, ServletContext>> {
             throw new BeanCreationException(e.toString());
         }
         return loader;
-    }
-
-    private void parseWebXml(File file) throws ClassNotFoundException {
-        logger.debug("Parsing web.xml from:" + file.getName());
-
-        try {
-            DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-            Document web = documentBuilder.parse(file);
-
-            Node root = web.getDocumentElement();
-            NodeList childNodes = root.getChildNodes();
-
-            for(int i = 0; i < childNodes.getLength(); i++){
-                Node node = childNodes.item(i);
-                switch (node.getNodeName()){
-                    case "context-param": {
-                        collectParams(node, contextParams);
-                        break;
-                    }
-                    case "servlet": {
-                        collectClasses(node, servlets);
-                        break;
-                    }
-                    case "filter": {
-                        collectClasses(node, filters);
-                        break;
-                    }
-                    case "servlet-mapping":{
-                        collectParams(node, servletsMapping);
-                        break;
-                    }
-                    case "filter-mapping": {
-                        collectParams(node, filtersMapping);
-                        break;
-                    }
-                }
-
-            }
-        } catch (ParserConfigurationException e) {
-            e.printStackTrace();
-        } catch (SAXException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private <T> void collectClasses(Node obj, Map<String, InfoNode<T>> map) throws ClassNotFoundException {
-        NodeList params = obj.getChildNodes();
-        String name = null;
-        Class<T> clazz = null;
-        Map<String, String> initParams = new HashMap<>();
-
-        for (int j = 0; j < params.getLength(); j++){
-            Node node = params.item(j);
-
-            if(node.getNodeName().contains("-name")){
-                name = node.getNodeValue();
-                continue;
-            }
-
-            if(node.getNodeName().contains("-class")){
-                clazz = (Class<T>) classLoader.loadClass(node.getNodeValue());
-                continue;
-            }
-
-            if(node.getNodeName().contains("init-param")){
-                collectParams(node, initParams);
-                continue;
-            }
-
-        }
-        map.put(name, new InfoNode<>(clazz, initParams));
-    }
-
-    private void collectParams(Node parameters, Map<String, String> map){
-        NodeList params = parameters.getChildNodes();
-        Node paramName = params.item(0);
-        Node paramValue = params.item(1);
-        map.put(paramName.getNodeValue(), paramValue.getNodeValue());
     }
 
     private void unzipWars(String path){
@@ -256,26 +176,223 @@ public class ContextLoader implements Loader<Map<String, ServletContext>> {
         return outputPath.substring(0, outputPath.lastIndexOf(warName));
     }
 
-    private class InfoNode<T> {
+    private class WebXmlParser {
 
-        private Class<T> clazz;
-        private Map<String, String> params;
+        private Map<String, String> contextParams = new HashMap<>();
+        private Map<String, JerryServletRegistration> servlets = new HashMap<>();
+        private Map<String, JerryFilterRegistration> filters = new HashMap<>();
+        private Map<String, Set<String>> servletMapping = new HashMap<>();
+        private Map<String, Set<String>> filterMapping = new HashMap<>();
+        private Map<String, Set<String>> filterServletNameMapping = new HashMap<>();
 
-        public InfoNode(Class<T> clazz, Map<String, String> params){
-            this.clazz = clazz;
-            this.params = params;
+        public ServletContext parseWebXml(File file) throws ClassNotFoundException {
+            clear();
+
+            try {
+                DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+                Document web = documentBuilder.parse(file);
+
+                Node root = web.getDocumentElement();
+                NodeList childNodes = root.getChildNodes();
+
+                for(int i = 0; i < childNodes.getLength(); i++){
+                    Node node = childNodes.item(i);
+                    switch (node.getNodeName()){
+                        case "context-param": {
+                            collectParams(node, contextParams);
+                            break;
+                        }
+                        case "servlet": {
+                            collectServlets(node);
+                            break;
+                        }
+                        case "servlet-mapping": {
+                            collectServletMapping(node);
+                            break;
+                        }
+                        case "filter": {
+                            collectFilters(node);
+                            break;
+                        }
+                        case "filter-mapping": {
+                            collectFilterMapping(node);
+                        }
+                    }
+                }
+
+                addMappings();
+            } catch (ParserConfigurationException e) {
+                e.printStackTrace();
+            } catch (SAXException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            ServletContext servletContext = new JerryServletContext(file.getPath(), contextParams, servlets, filters,
+                    null, resources, null, null, classLoader);
+
+            return servletContext;
         }
 
-        public Class<T> getClazz() {
-            return clazz;
+        private void clear(){
+            contextParams.clear();
+            servlets.clear();
+            filters.clear();
+            servletMapping.clear();
+            filterMapping.clear();
+            filterServletNameMapping.clear();
         }
 
-        public Map<String, String> getParams() {
-            return params;
+        private void addMappings(){
+            for (String servletName : servlets.keySet()){
+                Set<String> mapping = servletMapping.get(servletName);
+                servlets.get(servletName).addMapping(mapping.toArray(new String[mapping.size()]));
+            }
+
+            for (String filterName : filters.keySet()){
+                Set<String> mapping = filterMapping.get(filterName);
+                Set<String> servletNameMapping = filterServletNameMapping.get(filterName);
+                JerryFilterRegistration filterRegistration = filters.get(filterName);
+                filterRegistration.addMappingForUrlPatterns(null, false, mapping.toArray(new String[mapping.size()]));
+                filterRegistration.addMappingForServletNames(null, false, servletNameMapping.toArray(new String[servletNameMapping.size()]));
+            }
         }
-    }
 
-    private class AnnotationScanner {
+        private void collectFilters(Node obj){
+            NodeList params = obj.getChildNodes();
 
+            String filterName = null;
+            String filterClass = null;
+            Map<String, String> initParams = new HashMap<>();
+
+            for (int j = 0; j < params.getLength(); j++){
+                Node node = params.item(j);
+
+                switch (node.getNodeName()){
+                    case "filter-name": {
+                        filterName = node.getNodeValue();
+                        break;
+                    }
+                    case "filter-class": {
+                        filterClass = node.getNodeValue();
+                        break;
+                    }
+                    case "init-param": {
+                        collectParams(node, initParams);
+                        break;
+                    }
+                }
+            }
+
+            JerryFilterRegistration jerryFilterRegistration = new JerryFilterRegistration(filterName, filterClass, initParams);
+            filters.put(filterName, jerryFilterRegistration);
+        }
+
+        private void collectFilterMapping(Node mapping){
+            NodeList urls = mapping.getChildNodes();
+
+            String filterName = null;
+            Set<String> filterPatterns = new HashSet<>();
+            Set<String> servletNames = new HashSet<>();
+
+            for (int i = 0; i < urls.getLength(); i++){
+                Node url = urls.item(i);
+                switch (url.getNodeName()){
+                    case "filter-name":
+                        filterName = url.getNodeValue();
+                        break;
+                    case "url-pattern":
+                        filterPatterns.add(url.getNodeValue());
+                        break;
+                    case "servlet-name": {
+                        servletNames.add(url.getNodeValue());
+                        break;
+                    }
+                    case "dispatcher": {
+
+                        break;
+                    }
+                }
+            }
+
+            filterMapping.put(filterName, filterPatterns);
+            filterServletNameMapping.put(filterName, servletNames);
+        }
+
+        private void collectServlets(Node obj){
+            NodeList params = obj.getChildNodes();
+
+            String servletName = null;
+            String servletClass = null;
+            Map<String, String> initParams = new HashMap<>();
+
+            for (int j = 0; j < params.getLength(); j++){
+                Node node = params.item(j);
+
+                switch (node.getNodeName()){
+                    case "servlet-name": {
+                        servletName = node.getNodeValue();
+                        break;
+                    }
+                    case "servlet-class": {
+                        servletClass = node.getNodeValue();
+                        break;
+                    }
+                    case "jsp-file": {
+
+                        break;
+                    }
+                    case "init-param": {
+                        collectParams(node, initParams);
+                        break;
+                    }
+                }
+            }
+
+            JerryServletRegistration jerryServletRegistration = new JerryServletRegistration(servletName, servletClass, initParams);
+            servlets.put(servletName, jerryServletRegistration);
+        }
+
+        private void collectServletMapping(Node mapping){
+            NodeList urls = mapping.getChildNodes();
+
+            String servletName = null;
+            Set<String> servletPatterns = null;
+
+            for (int i = 0; i < urls.getLength(); i++){
+                Node url = urls.item(i);
+                switch (url.getNodeName()){
+                    case "servlet-name":
+                        servletName = url.getNodeValue();
+                        break;
+                    case "url-pattern":
+                        servletPatterns.add(url.getNodeValue());
+                        break;
+                }
+            }
+
+            servletMapping.put(servletName, servletPatterns);
+        }
+
+        private void collectParams(Node parameters, Map<String, String> map){
+            NodeList params = parameters.getChildNodes();
+
+            String name = null;
+            String value = null;
+
+            for (int i = 0; i < params.getLength(); i++){
+                Node param = params.item(i);
+                switch (param.getNodeName()){
+                    case "param-name":
+                        name = param.getNodeValue();
+                        break;
+                    case "param-value":
+                        value = param.getNodeValue();
+                        break;
+                }
+            }
+            map.put(name, value);
+        }
     }
 }
