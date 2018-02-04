@@ -133,7 +133,7 @@ public class JerryServletContext implements ServletContext {
     }
 
     private boolean comparePaths(String path, String resource){
-        Pattern pattern = Pattern.compile(path + "(\\w*\\" + File.pathSeparator + "| \\w*$)");
+        Pattern pattern = Pattern.compile(path + "(\\w*" + Pattern.quote(File.separator) + "| \\w*$)");
         return pattern.matcher(resource).find();
     }
 
@@ -153,7 +153,7 @@ public class JerryServletContext implements ServletContext {
     public RequestDispatcher getRequestDispatcher(String path) {
         for (JerryServletRegistration servletRegistration : servletRegistrations.values()){
             for (String p : servletRegistration.getMappings()){
-                if(comparePaths(path, p)){
+                if(path.equals(p)){
                     return servletRegistration.getJerryRequestDispatcher(this);
                 }
             }
@@ -340,11 +340,11 @@ public class JerryServletContext implements ServletContext {
     }
 
     public FilterRegistration getFilterRegistration(String filterName) {
-        return null;
+        return filterRegistrations.get(filterName);
     }
 
     public Map<String, ? extends FilterRegistration> getFilterRegistrations() {
-        return null;
+        return filterRegistrations;
     }
 
     public SessionCookieConfig getSessionCookieConfig() {

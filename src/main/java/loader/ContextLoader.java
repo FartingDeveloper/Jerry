@@ -30,17 +30,13 @@ public class ContextLoader implements Loader<Map<String, ServletContext>> {
     private static final String LIB = "lib";
     private static final String CLASSES = "classes";
 
-    Map<String, ServletContext> contexts;
+    private Map<String, ServletContext> contexts = new HashMap<>();
     private ClassLoader classLoader;
     private Set<String> resources;
 
     private Logger logger = LogManager.getLogger("loader.ContextLoader");
 
     private WebXmlParser parser = new WebXmlParser();
-
-    public ContextLoader(){
-        contexts = new HashMap<>();
-    }
 
     public Map<String, ServletContext> load(String path) {
         logger.debug("Loading contexts.");
@@ -51,14 +47,9 @@ public class ContextLoader implements Loader<Map<String, ServletContext>> {
         File webapps = new File(path);
 
         for (File file : webapps.listFiles()){
-            try {
-                if(! isWar(file)){
-                    ServletContext context = createContext(file);
-                    contexts.put(file.getName(), context);
-                }
-            } catch (ClassNotFoundException e) {
-                logger.error("Class loading error.");
-                throw new BeanCreationException(e.toString());
+            if(! isWar(file)){
+                ServletContext context = createContext(file);
+                contexts.put(file.getName(), context);
             }
         }
 
@@ -69,17 +60,17 @@ public class ContextLoader implements Loader<Map<String, ServletContext>> {
         contexts.clear();
     }
 
-    private ServletContext createContext(File file) throws ClassNotFoundException {
+    private ServletContext createContext(File file){
         logger.debug("Creating context:" + file.getName());
 
-        File jars = new File(file.getAbsolutePath() + File.pathSeparator + WEB_INF + File.pathSeparator + LIB);
-        File classes = new File(file.getAbsolutePath() + File.pathSeparator + WEB_INF + File.pathSeparator + CLASSES);
+        File jars = new File(file.getAbsolutePath() + File.separator + WEB_INF + File.separator + LIB);
+        File classes = new File(file.getAbsolutePath() + File.separator + WEB_INF + File.separator + CLASSES);
         classLoader = loadClasses(jars, classes);
 
-        File resourcesPath = new File(file.getAbsolutePath() + File.pathSeparator + WEB_INF);
+        File resourcesPath = new File(file.getAbsolutePath() + File.separator + WEB_INF);
         resources = loadResources(resourcesPath);
 
-        File webXml = new File(file.getAbsolutePath() + File.pathSeparator + WEB_INF + File.pathSeparator + WEB_XML);
+        File webXml = new File(file.getAbsolutePath() + File.separator + WEB_INF + File.separator + WEB_XML);
         logger.debug("Parsing web.xml from:" + file.getName());
 
         return parser.parseWebXml(webXml);
@@ -151,7 +142,7 @@ public class ContextLoader implements Loader<Map<String, ServletContext>> {
 
         while (entries.hasMoreElements()){
             JarEntry entry = entries.nextElement();
-            File file = new File(outputDirName + File.pathSeparator + entry.getName());
+            File file = new File(outputDirName + File.separator + entry.getName());
             new File(file.getParent()).mkdirs(); //sub directories
 
             try(InputStream in = war.getInputStream(entry); OutputStream out = new FileOutputStream(file)) {
@@ -185,7 +176,7 @@ public class ContextLoader implements Loader<Map<String, ServletContext>> {
         private Map<String, Set<String>> filterMapping = new HashMap<>();
         private Map<String, Set<String>> filterServletNameMapping = new HashMap<>();
 
-        public ServletContext parseWebXml(File file) throws ClassNotFoundException {
+        public ServletContext parseWebXml(File file){
             clear();
 
             try {
@@ -226,7 +217,7 @@ public class ContextLoader implements Loader<Map<String, ServletContext>> {
             } catch (SAXException e) {
                 e.printStackTrace();
             } catch (IOException e) {
-                e.printStackTrace();
+                throw new BeanCreationException("Can't find" + file.getName());
             }
 
             ServletContext servletContext = new JerryServletContext(file.getPath(), contextParams, servlets, filters,
@@ -271,11 +262,11 @@ public class ContextLoader implements Loader<Map<String, ServletContext>> {
 
                 switch (node.getNodeName()){
                     case "filter-name": {
-                        filterName = node.getNodeValue();
+                        filterName = node.getTextContent();
                         break;
                     }
                     case "filter-class": {
-                        filterClass = node.getNodeValue();
+                        filterClass = node.getTextContent();
                         break;
                     }
                     case "init-param": {
@@ -300,13 +291,13 @@ public class ContextLoader implements Loader<Map<String, ServletContext>> {
                 Node url = urls.item(i);
                 switch (url.getNodeName()){
                     case "filter-name":
-                        filterName = url.getNodeValue();
+                        filterName = url.getTextContent();
                         break;
                     case "url-pattern":
-                        filterPatterns.add(url.getNodeValue());
+                        filterPatterns.add(url.getTextContent());
                         break;
                     case "servlet-name": {
-                        servletNames.add(url.getNodeValue());
+                        servletNames.add(url.getTextContent());
                         break;
                     }
                     case "dispatcher": {
@@ -332,11 +323,11 @@ public class ContextLoader implements Loader<Map<String, ServletContext>> {
 
                 switch (node.getNodeName()){
                     case "servlet-name": {
-                        servletName = node.getNodeValue();
+                        servletName = node.getTextContent();
                         break;
                     }
                     case "servlet-class": {
-                        servletClass = node.getNodeValue();
+                        servletClass = node.getTextContent();
                         break;
                     }
                     case "jsp-file": {
@@ -358,16 +349,16 @@ public class ContextLoader implements Loader<Map<String, ServletContext>> {
             NodeList urls = mapping.getChildNodes();
 
             String servletName = null;
-            Set<String> servletPatterns = null;
+            Set<String> servletPatterns = new HashSet<>();
 
             for (int i = 0; i < urls.getLength(); i++){
                 Node url = urls.item(i);
                 switch (url.getNodeName()){
                     case "servlet-name":
-                        servletName = url.getNodeValue();
+                        servletName = url.getTextContent();
                         break;
                     case "url-pattern":
-                        servletPatterns.add(url.getNodeValue());
+                        servletPatterns.add(url.getTextContent());
                         break;
                 }
             }
@@ -385,10 +376,10 @@ public class ContextLoader implements Loader<Map<String, ServletContext>> {
                 Node param = params.item(i);
                 switch (param.getNodeName()){
                     case "param-name":
-                        name = param.getNodeValue();
+                        name = param.getTextContent();
                         break;
                     case "param-value":
-                        value = param.getNodeValue();
+                        value = param.getTextContent();
                         break;
                 }
             }

@@ -65,6 +65,7 @@ public class JerryServletRegistration extends JerryRegistration implements Servl
             requestDispatcher = config.getJerryRequestDispatcher();
         } catch (ClassNotFoundException e) {
             logger.error("Class isn't found: " + className);
+            throw new RuntimeException("Class isn't found");
         } catch (InstantiationException e) {
             e.printStackTrace();
         } catch (ServletException e) {
