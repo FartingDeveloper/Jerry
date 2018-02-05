@@ -23,7 +23,7 @@ import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Map;
 
-public class ContextTest {
+public class WebXmlParserTest {
 
     public static JerryServletContext servletContext;
 
@@ -32,9 +32,16 @@ public class ContextTest {
         //we need an outer class object to use the inner object constructor
         //(the inner class object needs to know about its parent object)
         ContextLoader outerObject = new ContextLoader();
+
+        Method loadClasses = outerObject.getClass().getDeclaredMethod("loadClasses", File.class, File.class);
+        loadClasses.setAccessible(true);
+        URL jars = outerObject.getClass().getClassLoader().getResource("lib");
+        URL classes = outerObject.getClass().getClassLoader().getResource("classes");
+
         Field field = outerObject.getClass().getDeclaredField("classLoader");
         field.setAccessible(true);
-        field.set(outerObject, outerObject.getClass().getClassLoader());
+        field.set(outerObject, loadClasses.invoke(outerObject, new File(jars.toURI()), new File(classes.toURI())));
+
         //let's get the inner class
         //(we know that the outer class has only one inner class, so we can use index 0)
         Class<?> innerClass = ContextLoader.class.getDeclaredClasses()[0];
@@ -64,7 +71,7 @@ public class ContextTest {
     }
 
     @Test
-    public void servletRegistrationTest(){
+    public void WebXmlParserServletTest(){
         Collection<? extends ServletRegistration> servletRegistrations = servletContext.getServletRegistrations().values();
         for (ServletRegistration servletRegistration : servletRegistrations){
             Collection<String> mappings = servletRegistration.getMappings();
@@ -85,7 +92,7 @@ public class ContextTest {
     }
 
     @Test
-    public void filterRegistrationTest(){
+    public void  WebXmlParserFilterTest(){
         Collection<? extends FilterRegistration> filterRegistrations = servletContext.getFilterRegistrations().values();
         for (FilterRegistration filterRegistration : filterRegistrations){
             System.out.println("Filter name: " + filterRegistration.getName());
@@ -112,30 +119,11 @@ public class ContextTest {
     }
 
     @Test
-    public void initParamsTest(){
+    public void WebXmlInitParamsTest(){
         Enumeration<String> names = servletContext.getInitParameterNames();
         while (names.hasMoreElements()){
             String name = names.nextElement();
             System.out.println("Init param name: " + name + " Init param value: " + servletContext.getInitParameter(name));
         }
     }
-
-    @Test
-    public void attributeTest(){
-        servletContext.setAttribute("A", "B");
-        if(servletContext.getAttribute("A") != "B"){
-            Assert.fail();
-        }
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void setInitParamTest(){
-        servletContext.setInitParameter("A", "A");
-    }
-
-    @Test(expected = RuntimeException.class)
-    public void requestDispatcherTest(){
-        servletContext.getRequestDispatcher("/login");
-    }
-
 }

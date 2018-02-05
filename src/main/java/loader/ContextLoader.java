@@ -89,10 +89,10 @@ public class ContextLoader implements Loader<Map<String, ServletContext>> {
 
         try {
             URL[] urls = new URL[files.length + 1];
-            urls[size - 1] = new URL(classes.getAbsolutePath());
+            urls[size - 1] = classes.toURI().toURL();
 
             for(int i = 0; i < size - 1; i++){
-                urls[i] = new URL(files[i].getAbsolutePath());
+                urls[i] = files[i].toURI().toURL();
             }
 
             loader = new URLClassLoader(urls, this.getClass().getClassLoader());
@@ -238,7 +238,9 @@ public class ContextLoader implements Loader<Map<String, ServletContext>> {
         private void addMappings(){
             for (String servletName : servlets.keySet()){
                 Set<String> mapping = servletMapping.get(servletName);
-                servlets.get(servletName).addMapping(mapping.toArray(new String[mapping.size()]));
+                JerryServletRegistration servlet = servlets.get(servletName);
+                servlet.addMapping(mapping.toArray(new String[mapping.size()]));
+                servlet.setInitialized(true);
             }
 
             for (String filterName : filters.keySet()){
@@ -247,6 +249,7 @@ public class ContextLoader implements Loader<Map<String, ServletContext>> {
                 JerryFilterRegistration filterRegistration = filters.get(filterName);
                 filterRegistration.addMappingForUrlPatterns(null, false, mapping.toArray(new String[mapping.size()]));
                 filterRegistration.addMappingForServletNames(null, false, servletNameMapping.toArray(new String[servletNameMapping.size()]));
+                filterRegistration.setInitialized(true);
             }
         }
 

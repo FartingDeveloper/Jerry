@@ -8,10 +8,9 @@ import java.util.*;
 
 public class JerryServletRegistration extends JerryRegistration implements ServletRegistration {
 
-    private Set<String> mappings;
-
     private String role;
 
+    private Set<String> mappings;
     protected Map<ServletContext, JerryServletConfig> cache;
 
     protected org.apache.logging.log4j.Logger logger = LogManager.getLogger("servlet.JerryServletRegistration");
@@ -35,6 +34,8 @@ public class JerryServletRegistration extends JerryRegistration implements Servl
 
     @Override
     public Set<String> addMapping(String... urlPatterns) {
+        check(urlPatterns);
+
         for (String url : urlPatterns){
             mappings.add(url);
         }

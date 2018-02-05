@@ -240,9 +240,8 @@ public class JerryServletContext implements ServletContext {
     }
 
     public boolean setInitParameter(String name, String value) {
-        if(initialized) throw new IllegalStateException();
-
         if(name == null) throw new NullPointerException();
+        if(initialized) throw new IllegalStateException();
 
         boolean result = contextParameters.containsKey(name);
         contextParameters.put(name, value);
@@ -419,10 +418,12 @@ public class JerryServletContext implements ServletContext {
 
     }
 
-    private void check(String name){
-        if(initialized) throw new IllegalStateException();
+    private void check(String... params){
+        for(String param : params){
+            if(param == null) throw new IllegalArgumentException();
+            else if(param.isEmpty()) throw new IllegalArgumentException();
+        }
 
-        if(name == null) throw new IllegalArgumentException();
-        else if(name.isEmpty()) throw new IllegalArgumentException();
+        if(initialized) throw new IllegalStateException();
     }
 }

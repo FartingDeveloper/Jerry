@@ -11,6 +11,8 @@ public class JerryRegistration implements Registration {
     protected String className;
     protected Map<String, String> initParameters;
 
+    private boolean initialized;
+
     public JerryRegistration(String name, String className){
         this.name = name;
         this.className = className;
@@ -34,6 +36,8 @@ public class JerryRegistration implements Registration {
 
     @Override
     public boolean setInitParameter(String name, String value) {
+        check(name, value);
+
         boolean result = initParameters.containsKey(name);
         initParameters.put(name, value);
         return result;
@@ -46,12 +50,30 @@ public class JerryRegistration implements Registration {
 
     @Override
     public Set<String> setInitParameters(Map<String, String> initParameters) {
-        initParameters.putAll(initParameters);
+
+        for (String name : initParameters.keySet()){
+            check(name, initParameters.get(name));
+        }
+
+        this.initParameters.putAll(initParameters);
         return initParameters.keySet();
     }
 
     @Override
     public Map<String, String> getInitParameters() {
         return initParameters;
+    }
+
+    public void setInitialized(boolean init){
+        initialized = init;
+    }
+
+    protected void check(Object... obj){
+
+        for (int i = 0; i < obj.length; i++){
+            if(obj[i] == null) throw new IllegalArgumentException();
+        }
+
+        if(initialized) throw new IllegalStateException();
     }
 }
