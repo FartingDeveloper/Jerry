@@ -1,0 +1,35 @@
+-Xajruntimetarget:1.5
+-Xlint:ignore
+-1.8
+-encoding
+UTF-8
+-showWeaveInfo
+-source
+1.8
+-target
+1.8
+-verbose
+-classpath
+C:\Users\HP PC\.m2\repository\org\springframework\spring-context\5.0.2.RELEASE\spring-context-5.0.2.RELEASE.jar;C:\Users\HP PC\.m2\repository\javax\servlet\javax.servlet-api\4.0.0\javax.servlet-api-4.0.0.jar;C:\Users\HP PC\.m2\repository\javax\servlet\jstl\1.2\jstl-1.2.jar;C:\Users\HP PC\.m2\repository\mysql\mysql-connector-java\5.1.6\mysql-connector-java-5.1.6.jar;C:\Users\HP PC\.m2\repository\javax\mail\javax.mail-api\1.6.0\javax.mail-api-1.6.0.jar;C:\Users\HP PC\.m2\repository\com\sun\mail\javax.mail\1.6.0\javax.mail-1.6.0.jar;C:\Users\HP PC\.m2\repository\org\aspectj\aspectjrt\1.6.11\aspectjrt-1.6.11.jar;C:\Users\HP PC\.m2\repository\org\aspectj\aspectjweaver\1.8.9\aspectjweaver-1.8.9.jar;C:\Users\HP PC\.m2\repository\org\springframework\spring-aop\5.0.2.RELEASE\spring-aop-5.0.2.RELEASE.jar;C:\Users\HP PC\.m2\repository\org\springframework\spring-beans\5.0.2.RELEASE\spring-beans-5.0.2.RELEASE.jar;C:\Users\HP PC\.m2\repository\org\springframework\spring-core\5.0.2.RELEASE\spring-core-5.0.2.RELEASE.jar;C:\Users\HP PC\.m2\repository\org\springframework\spring-jcl\5.0.2.RELEASE\spring-jcl-5.0.2.RELEASE.jar;C:\Users\HP PC\.m2\repository\org\springframework\spring-expression\5.0.2.RELEASE\spring-expression-5.0.2.RELEASE.jar;C:\Users\HP PC\.m2\repository\javax\activation\activation\1.1\activation-1.1.jar;C:\Users\HP PC\IdeaProjects\SocialNetwork\target\classes
+-d
+C:\Users\HP PC\IdeaProjects\SocialNetwork\target\classes
+C:\Users\HP PC\IdeaProjects\SocialNetwork\src\main\java\annotation\Inject.java
+C:\Users\HP PC\IdeaProjects\SocialNetwork\src\main\java\aspect\TransactionAspect.aj
+C:\Users\HP PC\IdeaProjects\SocialNetwork\src\main\java\context\ApplicationContextSkeleton.java
+C:\Users\HP PC\IdeaProjects\SocialNetwork\src\main\java\controllers\ConfirmEmailController.java
+C:\Users\HP PC\IdeaProjects\SocialNetwork\src\main\java\controllers\InjectionServlet.java
+C:\Users\HP PC\IdeaProjects\SocialNetwork\src\main\java\controllers\LoginController.java
+C:\Users\HP PC\IdeaProjects\SocialNetwork\src\main\java\controllers\MessageController.java
+C:\Users\HP PC\IdeaProjects\SocialNetwork\src\main\java\controllers\MessagesController.java
+C:\Users\HP PC\IdeaProjects\SocialNetwork\src\main\java\controllers\SendMessageController.java
+C:\Users\HP PC\IdeaProjects\SocialNetwork\src\main\java\controllers\SignUpController.java
+C:\Users\HP PC\IdeaProjects\SocialNetwork\src\main\java\controllers\UserController.java
+C:\Users\HP PC\IdeaProjects\SocialNetwork\src\main\java\dao\MessageDao.java
+C:\Users\HP PC\IdeaProjects\SocialNetwork\src\main\java\dao\UserDao.java
+C:\Users\HP PC\IdeaProjects\SocialNetwork\src\main\java\dbc\ConnectionManager.java
+C:\Users\HP PC\IdeaProjects\SocialNetwork\src\main\java\entity\Message.java
+C:\Users\HP PC\IdeaProjects\SocialNetwork\src\main\java\entity\User.java
+C:\Users\HP PC\IdeaProjects\SocialNetwork\src\main\java\filters\AuthorizationFilter.java
+C:\Users\HP PC\IdeaProjects\SocialNetwork\src\main\java\mail\EmailAuthenticator.java
+C:\Users\HP PC\IdeaProjects\SocialNetwork\src\main\java\mail\MailManager.java
+C:\Users\HP PC\IdeaProjects\SocialNetwork\src\main\java\reflection\FieldReflector.java

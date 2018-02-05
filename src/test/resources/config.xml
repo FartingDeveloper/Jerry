@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean name="connectionManager" class="dbc.ConnectionManager" scope="singleton"/>
+
+    <bean name="userDao" class="dao.UserDao" scope="singleton">
+        <property name="dataSource" ref="connectionManager"/>
+    </bean>
+
+    <bean name="messageDao" class="dao.MessageDao" scope="singleton">
+        <property name="dataSource" ref="connectionManager"/>
+    </bean>
+
+    <bean name="mailManager" class="mail.MailManager" scope="singleton" init-method="init">
+        <property name="smtpHost" value="smtp.mail.ru"/>
+        <property name="smtpPort" value="465"/>
+        <property name="login" value="HollyFurts@mail.ru"/>
+        <property name="password" value="rus90210"/>
+        <property name="thema" value="Registration"/>
+        <property name="url" value="http://localhost:8080/SocialNetwork-1.0/confirmEmail"/>
+    </bean>
+</beans>
