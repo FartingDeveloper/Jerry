@@ -2,6 +2,8 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import javax.servlet.ServletException;
+import java.lang.reflect.InvocationTargetException;
+import java.net.URISyntaxException;
 import java.util.Enumeration;
 
 public class ServletContextTest extends WebXmlParserTest{
@@ -47,7 +49,7 @@ public class ServletContextTest extends WebXmlParserTest{
 
     @Test
     public void getNamedDispatcherTest(){
-        if(servletContext.getRequestDispatcher("login") == null){
+        if(servletContext.getNamedDispatcher("login") == null){
             Assert.fail();
         }
     }

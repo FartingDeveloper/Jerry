@@ -40,7 +40,9 @@ public class WebXmlParserTest {
 
         Field field = outerObject.getClass().getDeclaredField("classLoader");
         field.setAccessible(true);
-        field.set(outerObject, loadClasses.invoke(outerObject, new File(jars.toURI()), new File(classes.toURI())));
+        ClassLoader classLoader = (ClassLoader) loadClasses.invoke(outerObject, new File(jars.toURI()), new File(classes.toURI()));
+        field.set(outerObject, classLoader);
+        Thread.currentThread().setContextClassLoader(classLoader);
 
         //let's get the inner class
         //(we know that the outer class has only one inner class, so we can use index 0)
