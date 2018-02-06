@@ -17,13 +17,13 @@ public class JerryServletRegistration extends JerryRegistration implements Servl
 
     public JerryServletRegistration(String servletName, String servletClassName){
         super(servletName, servletClassName);
-        mappings = new HashSet<>();
+        mappings = new LinkedHashSet<>();
         cache = new HashMap<>();
     }
 
     public JerryServletRegistration(String servletName, String servletClassName, Map<String, String> initParameters){
         super(servletName, servletClassName, initParameters);
-        mappings = new HashSet<>();
+        mappings = new LinkedHashSet<>();
         cache = new HashMap<>();
     }
 

@@ -285,6 +285,9 @@ public class JerryServletContext implements ServletContext {
 
     public ServletRegistration.Dynamic addServlet(String servletName, String className) {
         check(servletName);
+
+        if(servletRegistrations.get(servletName) != null) return null;
+
         JerryServletRegistrationDynamic servletRegistrationDynamic = new JerryServletRegistrationDynamic(servletName, className);
         servletRegistrations.put(servletName, servletRegistrationDynamic);
         return servletRegistrationDynamic;
@@ -292,6 +295,13 @@ public class JerryServletContext implements ServletContext {
 
     public ServletRegistration.Dynamic addServlet(String servletName, Servlet servlet) {
         check(servletName);
+
+        if(servlet instanceof SingleThreadModel){
+            throw new IllegalArgumentException();
+        }
+
+        if(servletRegistrations.get(servletName) != null) return null;
+
         JerryServletRegistrationDynamic servletRegistrationDynamic = new JerryServletRegistrationDynamic(servletName, servlet);
         servletRegistrations.put(servletName, servletRegistrationDynamic);
         return servletRegistrationDynamic;
@@ -425,5 +435,9 @@ public class JerryServletContext implements ServletContext {
         }
 
         if(initialized) throw new IllegalStateException();
+    }
+
+    public void setInitialized(boolean initialized) {
+        this.initialized = initialized;
     }
 }

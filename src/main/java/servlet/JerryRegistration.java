@@ -11,7 +11,7 @@ public class JerryRegistration implements Registration {
     protected String className;
     protected Map<String, String> initParameters;
 
-    private boolean initialized;
+    protected boolean initialized;
 
     public JerryRegistration(String name, String className){
         this.name = name;
@@ -68,10 +68,19 @@ public class JerryRegistration implements Registration {
         initialized = init;
     }
 
-    protected void check(Object... obj){
+    private void check(Object... obj){
 
         for (int i = 0; i < obj.length; i++){
             if(obj[i] == null) throw new IllegalArgumentException();
+        }
+
+        if(initialized) throw new IllegalStateException();
+    }
+
+    protected void check(String... str) {
+        for (int i = 0; i < str.length; i++){
+            if(str[i] == null) throw new IllegalArgumentException();
+            if(str[i].isEmpty()) throw new IllegalArgumentException();
         }
 
         if(initialized) throw new IllegalStateException();

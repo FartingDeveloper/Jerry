@@ -85,6 +85,7 @@ http://xmlns.jcp.org/xml/ns/javaee "
     <filter-mapping>
         <filter-name>filter</filter-name>
         <url-pattern>/*</url-pattern>
+        <dispatcher>FORWARD</dispatcher>
     </filter-mapping>
 
     <welcome-file-list>

@@ -18,7 +18,6 @@ public class JerryServletRegistrationDynamic extends JerryServletRegistration im
         this.servlet = servlet;
     }
 
-
     public JerryServletConfig getJerryServletConfig(ServletContext context){
         if(cache.get(context) == null){
             cache.put(context, new JerryServletConfigDynamic(context));
@@ -80,7 +79,7 @@ public class JerryServletRegistrationDynamic extends JerryServletRegistration im
             super(context);
         }
 
-        public JerryServletRegistration.JerryServletConfig.JerryRequestDispatcher getJerryRequestDispatcher(Servlet servlet) throws ClassNotFoundException, InstantiationException, ServletException, IllegalAccessException {
+        public JerryServletRegistration.JerryServletConfig.JerryRequestDispatcher getJerryRequestDispatcher(Servlet servlet){
             if(requestDispatcher == null){
                 requestDispatcher = new JerryServletRegistration.JerryServletConfig.JerryRequestDispatcher(servlet);
             }

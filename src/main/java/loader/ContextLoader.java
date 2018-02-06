@@ -11,6 +11,7 @@ import servlet.JerryFilterRegistration;
 import servlet.JerryServletContext;
 import servlet.JerryServletRegistration;
 
+import javax.servlet.DispatcherType;
 import javax.servlet.ServletContext;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -170,11 +171,17 @@ public class ContextLoader implements Loader<Map<String, ServletContext>> {
     private class WebXmlParser {
 
         private Map<String, String> contextParams = new HashMap<>();
+
         private Map<String, JerryServletRegistration> servlets = new HashMap<>();
+        private Map<String, Set<String>> servletMapping = new LinkedHashMap<>();
+
         private Map<String, JerryFilterRegistration> filters = new HashMap<>();
-        private Map<String, Set<String>> servletMapping = new HashMap<>();
-        private Map<String, Set<String>> filterMapping = new HashMap<>();
-        private Map<String, Set<String>> filterServletNameMapping = new HashMap<>();
+
+        private Map<String, Set<String>> filterMapping = new LinkedHashMap<>();
+        private Map<Set<String>, Set<DispatcherType>> dispatcherTypes = new HashMap<>();
+
+        private Map<String, Set<String>> filterServletNameMapping = new LinkedHashMap<>();
+        private Map<Set<String>, Set<DispatcherType>> servletNameDispatcherTypes = new HashMap<>();
 
         public ServletContext parseWebXml(File file){
             clear();
@@ -237,18 +244,24 @@ public class ContextLoader implements Loader<Map<String, ServletContext>> {
 
         private void addMappings(){
             for (String servletName : servlets.keySet()){
-                Set<String> mapping = servletMapping.get(servletName);
                 JerryServletRegistration servlet = servlets.get(servletName);
+
+                Set<String> mapping = servletMapping.get(servletName);
                 servlet.addMapping(mapping.toArray(new String[mapping.size()]));
                 servlet.setInitialized(true);
             }
 
             for (String filterName : filters.keySet()){
-                Set<String> mapping = filterMapping.get(filterName);
-                Set<String> servletNameMapping = filterServletNameMapping.get(filterName);
                 JerryFilterRegistration filterRegistration = filters.get(filterName);
-                filterRegistration.addMappingForUrlPatterns(null, false, mapping.toArray(new String[mapping.size()]));
-                filterRegistration.addMappingForServletNames(null, false, servletNameMapping.toArray(new String[servletNameMapping.size()]));
+
+                Set<String> mapping = filterMapping.get(filterName);
+                Set<DispatcherType> dispatcherTypesMapping = dispatcherTypes.get(mapping);
+                filterRegistration.addMappingForUrlPatterns(EnumSet.copyOf(dispatcherTypesMapping), false, mapping.toArray(new String[mapping.size()]));
+
+                Set<String> servletNameMapping = filterServletNameMapping.get(filterName);
+                Set<DispatcherType> dispatcherTypesServletNameMapping = servletNameDispatcherTypes.get(servletNameMapping);
+                filterRegistration.addMappingForServletNames(EnumSet.copyOf(dispatcherTypesServletNameMapping), false, servletNameMapping.toArray(new String[servletNameMapping.size()]));
+
                 filterRegistration.setInitialized(true);
             }
         }
@@ -289,6 +302,7 @@ public class ContextLoader implements Loader<Map<String, ServletContext>> {
             String filterName = null;
             Set<String> filterPatterns = new HashSet<>();
             Set<String> servletNames = new HashSet<>();
+            Set<DispatcherType> dispatcherTypeSet = new HashSet<>();
 
             for (int i = 0; i < urls.getLength(); i++){
                 Node url = urls.item(i);
@@ -304,15 +318,18 @@ public class ContextLoader implements Loader<Map<String, ServletContext>> {
                         break;
                     }
                     case "dispatcher": {
-
+                        dispatcherTypeSet.add(DispatcherType.valueOf(url.getTextContent()));
                         break;
                     }
                 }
             }
 
             filterMapping.put(filterName, filterPatterns);
+            dispatcherTypes.put(filterPatterns, dispatcherTypeSet);
+
             filterServletNameMapping.put(filterName, servletNames);
-        }
+            servletNameDispatcherTypes.put(servletNames, dispatcherTypeSet);
+    }
 
         private void collectServlets(Node obj){
             NodeList params = obj.getChildNodes();
