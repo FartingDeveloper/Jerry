@@ -36,7 +36,7 @@ public class JerryRegistration implements Registration {
 
     @Override
     public boolean setInitParameter(String name, String value) {
-        check(name, value);
+        checkInitParams(name, value);
 
         boolean result = initParameters.containsKey(name);
         initParameters.put(name, value);
@@ -50,6 +50,7 @@ public class JerryRegistration implements Registration {
 
     @Override
     public Set<String> setInitParameters(Map<String, String> initParameters) {
+        checkInitParams(initParameters.keySet(), initParameters.values());
 
         for (String name : initParameters.keySet()){
             check(name, initParameters.get(name));
@@ -68,7 +69,7 @@ public class JerryRegistration implements Registration {
         initialized = init;
     }
 
-    private void check(Object... obj){
+    private void checkInitParams(Object... obj){
 
         for (int i = 0; i < obj.length; i++){
             if(obj[i] == null) throw new IllegalArgumentException();

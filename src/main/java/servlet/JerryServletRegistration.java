@@ -8,23 +8,24 @@ import java.util.*;
 
 public class JerryServletRegistration extends JerryRegistration implements ServletRegistration {
 
-    private String role;
+    protected String role;
+    protected int loadOnStartup;
 
     private Set<String> mappings;
-    protected Map<ServletContext, JerryServletConfig> cache;
+    protected JerryServletRegistration.JerryServletConfig config;
 
     protected org.apache.logging.log4j.Logger logger = LogManager.getLogger("servlet.JerryServletRegistration");
 
     public JerryServletRegistration(String servletName, String servletClassName){
         super(servletName, servletClassName);
         mappings = new LinkedHashSet<>();
-        cache = new HashMap<>();
+        loadOnStartup = -1;
     }
 
     public JerryServletRegistration(String servletName, String servletClassName, Map<String, String> initParameters){
         super(servletName, servletClassName, initParameters);
         mappings = new LinkedHashSet<>();
-        cache = new HashMap<>();
+        loadOnStartup = -1;
     }
 
     public JerryServletRegistration(String servletName, String servletClassName, Map<String, String> initParameters, Set<String> mappings){
@@ -49,14 +50,14 @@ public class JerryServletRegistration extends JerryRegistration implements Servl
 
     @Override
     public String getRunAsRole() {
-        return null;
+        return role;
     }
 
     public JerryServletConfig getJerryServletConfig(ServletContext context){
-        if(cache.get(context) == null){
-            cache.put(context, new JerryServletConfig(context));
+        if(config == null){
+            config = new JerryServletConfig(context);
         }
-        return cache.get(context);
+        return config;
     }
 
     public JerryServletConfig.JerryRequestDispatcher getJerryRequestDispatcher(ServletContext context){

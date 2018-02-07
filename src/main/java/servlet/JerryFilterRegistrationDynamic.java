@@ -20,4 +20,8 @@ public class JerryFilterRegistrationDynamic extends JerryFilterRegistration impl
     public void setAsyncSupported(boolean isAsyncSupported) {
         this.asyncSupport = asyncSupport;
     }
+
+    public boolean isAsyncSupport() {
+        return asyncSupport;
+    }
 }

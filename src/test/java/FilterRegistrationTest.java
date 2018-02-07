@@ -126,7 +126,7 @@ public class FilterRegistrationTest extends RegistrationTest {
         for(int i = 0; i < urls.length; i++){
             set.add(urls[i]);
         }
-        
+
         if(jerryFilterRegistration.getDispatcherTypes(set) == null){
             Assert.fail();
         }

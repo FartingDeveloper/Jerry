@@ -1,7 +1,9 @@
 package servlet;
 
 import javax.servlet.DispatcherType;
+import javax.servlet.FilterConfig;
 import javax.servlet.FilterRegistration;
+import javax.servlet.ServletContext;
 import java.util.*;
 
 public class JerryFilterRegistration extends JerryRegistration implements FilterRegistration {
@@ -9,6 +11,7 @@ public class JerryFilterRegistration extends JerryRegistration implements Filter
     private Set<String> mappings;
     private Set<String> servletNameMappings;
     private Map<Set<String>, EnumSet<DispatcherType>> dispatcherTypes;
+    private JerryFilterRegistration.JerryFilterConfig config;
 
     public JerryFilterRegistration(String name, String className) {
         super(name, className);
@@ -62,6 +65,13 @@ public class JerryFilterRegistration extends JerryRegistration implements Filter
         return null;
     }
 
+    public JerryFilterRegistration.JerryFilterConfig getFilterConfig(ServletContext context){
+        if(config == null){
+            config =  new JerryFilterRegistration.JerryFilterConfig(context);
+        }
+        return config;
+    }
+
     private void add(Set<String> set, EnumSet<DispatcherType> dispatcherTypes, boolean isMatchAfter, String... urls){
         check(urls);
 
@@ -72,5 +82,47 @@ public class JerryFilterRegistration extends JerryRegistration implements Filter
 
         set.addAll(tmp);
         this.dispatcherTypes.put(set, dispatcherTypes);
+    }
+
+    private class JerryFilterConfig implements FilterConfig {
+
+        private ServletContext context;
+
+        public JerryFilterConfig(ServletContext context){
+            this.context = context;
+        }
+
+        @Override
+        public String getFilterName() {
+            return name;
+        }
+
+        @Override
+        public ServletContext getServletContext() {
+            return context;
+        }
+
+        @Override
+        public String getInitParameter(String name) {
+            return initParameters.get(name);
+        }
+
+        @Override
+        public Enumeration<String> getInitParameterNames() {
+            return new Enumeration<String>() {
+
+                private Iterator<String> iterator = initParameters.keySet().iterator();
+
+                @Override
+                public boolean hasMoreElements() {
+                    return iterator.hasNext();
+                }
+
+                @Override
+                public String nextElement() {
+                    return iterator.next();
+                }
+            };
+        }
     }
 }

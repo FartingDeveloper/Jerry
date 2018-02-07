@@ -44,7 +44,6 @@ public class JerryServletContext implements ServletContext {
         this.mimeTypes = mimeTypes;
         this.contexts = contexts;
         this.classLoader = classLoader;
-        initialized = false;
     }
 
     public JerryServletContext(Map<String, String> contextParameters,
@@ -60,7 +59,6 @@ public class JerryServletContext implements ServletContext {
         this.mimeTypes = mimeTypes;
         this.contexts = contexts;
         this.classLoader = classLoader;
-        initialized = true;
     }
 
     public JerryServletContext(String contextPath, Map<String, String> contextParameters,
@@ -76,7 +74,6 @@ public class JerryServletContext implements ServletContext {
         this.mimeTypes = mimeTypes;
         this.contexts = contexts;
         this.classLoader = classLoader;
-        initialized = true;
     }
 
     public String getContextPath() {
@@ -316,8 +313,15 @@ public class JerryServletContext implements ServletContext {
     }
 
     public <T extends Servlet> T createServlet(Class<T> clazz) throws ServletException {
-
-        return null;
+        T servlet = null;
+        try {
+            servlet =  clazz.newInstance();
+        } catch (InstantiationException e) {
+            logger.error("Can' create servlet.");
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return servlet;
     }
 
     public ServletRegistration getServletRegistration(String servletName) {
@@ -330,6 +334,8 @@ public class JerryServletContext implements ServletContext {
 
     public FilterRegistration.Dynamic addFilter(String filterName, String className) {
         check(filterName);
+
+        if(filterRegistrations.get(filterName) != null) return null;
 
         JerryFilterRegistrationDynamic filterRegistrationDynamic = new JerryFilterRegistrationDynamic(filterName, className);
         filterRegistrations.put(filterName, filterRegistrationDynamic);
@@ -345,7 +351,15 @@ public class JerryServletContext implements ServletContext {
     }
 
     public <T extends Filter> T createFilter(Class<T> clazz) throws ServletException {
-        return null;
+        T filter = null;
+        try {
+            filter =  clazz.newInstance();
+        } catch (InstantiationException e) {
+            logger.error("Can' create servlet.");
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return filter;
     }
 
     public FilterRegistration getFilterRegistration(String filterName) {
@@ -439,5 +453,9 @@ public class JerryServletContext implements ServletContext {
 
     public void setInitialized(boolean initialized) {
         this.initialized = initialized;
+    }
+
+    public void init(){
+
     }
 }

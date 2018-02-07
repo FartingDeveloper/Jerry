@@ -6,7 +6,6 @@ import java.util.*;
 
 public class JerryServletRegistrationDynamic extends JerryServletRegistration implements ServletRegistration.Dynamic{
 
-    private int loadOnStartup = -1;
     private Servlet servlet;
 
     public JerryServletRegistrationDynamic(String servletName, String servletClassName){
@@ -19,10 +18,10 @@ public class JerryServletRegistrationDynamic extends JerryServletRegistration im
     }
 
     public JerryServletConfig getJerryServletConfig(ServletContext context){
-        if(cache.get(context) == null){
-            cache.put(context, new JerryServletConfigDynamic(context));
+        if(config == null){
+            config = new JerryServletConfigDynamic(context);
         }
-        return cache.get(context);
+        return config;
     }
 
     public JerryServletConfig.JerryRequestDispatcher getJerryRequestDispatcher(ServletContext context){
@@ -63,7 +62,7 @@ public class JerryServletRegistrationDynamic extends JerryServletRegistration im
 
     @Override
     public void setRunAsRole(String roleName) {
-
+        this.role = roleName;
     }
 
     @Override

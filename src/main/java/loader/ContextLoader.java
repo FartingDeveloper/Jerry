@@ -10,9 +10,11 @@ import org.xml.sax.SAXException;
 import servlet.JerryFilterRegistration;
 import servlet.JerryServletContext;
 import servlet.JerryServletRegistration;
+import servlet.JerryServletRegistrationDynamic;
 
 import javax.servlet.DispatcherType;
 import javax.servlet.ServletContext;
+import javax.servlet.ServletSecurityElement;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -337,6 +339,9 @@ public class ContextLoader implements Loader<Map<String, ServletContext>> {
             String servletName = null;
             String servletClass = null;
             Map<String, String> initParams = new HashMap<>();
+            int loadOnStartup = -1;
+            String role = null;
+            ServletSecurityElement securityRoleRef = new ServletSecurityElement();
 
             for (int j = 0; j < params.getLength(); j++){
                 Node node = params.item(j);
@@ -358,11 +363,27 @@ public class ContextLoader implements Loader<Map<String, ServletContext>> {
                         collectParams(node, initParams);
                         break;
                     }
+                    case "load-on-startup":{
+                        loadOnStartup = Integer.valueOf(node.getTextContent());
+                        break;
+                    }
+                    case "run-as": {
+                        role = node.getTextContent();
+                        break;
+                    }
+                    case "security-role-ref": {
+
+                    }
                 }
             }
 
-            JerryServletRegistration jerryServletRegistration = new JerryServletRegistration(servletName, servletClass, initParams);
+            JerryServletRegistrationDynamic jerryServletRegistration = new JerryServletRegistrationDynamic(servletName, servletClass);
+            jerryServletRegistration.setInitParameters(initParams);
+            jerryServletRegistration.setLoadOnStartup(loadOnStartup);
+            jerryServletRegistration.setRunAsRole(role);
+
             servlets.put(servletName, jerryServletRegistration);
+
         }
 
         private void collectServletMapping(Node mapping){

@@ -328,4 +328,116 @@ public class ServletContextTest extends WebXmlParserTest{
         Class<? extends Servlet> servletClass = Mockito.mock(Servlet.class).getClass();
         servletContext.addServlet(name, servletClass);
     }
+
+    @Test
+    public void addFilterWithNameAndClassNameTest(){
+        servletContext.setInitialized(false);
+
+        String name = "Homer";
+        String filterClass = "Homer.class";
+        FilterRegistration filterRegistration = servletContext.addFilter(name, filterClass);
+        if(servletContext.getFilterRegistration(name) != filterRegistration){
+            Assert.fail();
+        }
+    }
+
+    @Test
+    public void addFilterWithRepeatedNameAndClassNameTest(){
+        servletContext.setInitialized(false);
+
+        String name = "Homer";
+        String filterClass = "Homer.class";
+        servletContext.addFilter(name, filterClass);
+        if(servletContext.addFilter(name, filterClass) != null){
+            Assert.fail();
+        }
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void addFilterWithNullNameAndClassNameTest(){
+        servletContext.setInitialized(false);
+
+        String name = null;
+        String filterClass = "Homer.class";
+        servletContext.addFilter(name, filterClass);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void addFilterWithEmptyNameAndClassNameTest(){
+        servletContext.setInitialized(false);
+
+        String name = "";
+        String filterClass = "Homer.class";
+        servletContext.addFilter(name, filterClass);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void addFilterWithNameAndClassNameToInitializedContextTest(){
+        String name = "Homer";
+        String filterClass = "Homer.class";
+        servletContext.addFilter(name, filterClass);
+    }
+
+    @Test
+    public void addFilterWithNameAndFilterTest(){
+        servletContext.setInitialized(false);
+
+        String name = "Homer";
+        Filter filter = Mockito.mock(Filter.class);
+        FilterRegistration filterRegistration = servletContext.addFilter(name, filter);
+        if(servletContext.getFilterRegistration(name) != filterRegistration){
+            Assert.fail();
+        }
+    }
+
+    @Test
+    public void addFilterWithRepeatedNameAndFilterTest(){
+        servletContext.setInitialized(false);
+
+        String name = "Homer";
+        Filter filter = Mockito.mock(Filter.class);
+        servletContext.addFilter(name, filter);
+        if(servletContext.addFilter(name, filter) != null){
+            Assert.fail();
+        }
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void addFilterWithNullNameAndFilterTest(){
+        servletContext.setInitialized(false);
+
+        String name = null;
+        Filter filter = Mockito.mock(Filter.class);
+        servletContext.addFilter(name, filter);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void addFilterWithEmptyNameAndFilterTest(){
+        servletContext.setInitialized(false);
+
+        String name = "";
+        Filter filter = Mockito.mock(Filter.class);
+        servletContext.addFilter(name, filter);
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void addFilterWithNameAndFilterToInitializedContextTest(){
+        String name = "Homer";
+        Filter filter = Mockito.mock(Filter.class);
+        servletContext.addFilter(name, filter);
+    }
+
+    @Test
+    public void createServletTest() throws ServletException {
+        if(servletContext.createServlet(Mockito.mock(Servlet.class).getClass()) == null){
+            Assert.fail();
+        }
+    }
+
+    @Test
+    public void createFilterTest() throws ServletException {
+        if(servletContext.createFilter(Mockito.mock(Filter.class).getClass()) == null){
+            Assert.fail();
+        }
+    }
 }
