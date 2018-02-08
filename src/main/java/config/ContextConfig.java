@@ -7,6 +7,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import servlet.JerryServletContext;
 
 import javax.servlet.ServletContext;
 import java.io.File;
@@ -33,12 +34,12 @@ public class ContextConfig {
     }
 
     @Bean
-    public Loader<Map<String, ServletContext>> contextLoader(){
+    public Loader<Map<String, JerryServletContext>> contextLoader(){
         return new ContextLoader();
     }
 
     @Bean
-    public Map<String, ServletContext> contexts(Loader<Map<String, ServletContext>> loader, String rootPath){
+    public Map<String, JerryServletContext> contexts(Loader<Map<String, JerryServletContext>> loader, String rootPath){
         return loader.load(rootPath + File.separator + WEB_APPS);
     }
 

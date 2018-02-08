@@ -109,20 +109,7 @@ public class JerryFilterRegistration extends JerryRegistration implements Filter
 
         @Override
         public Enumeration<String> getInitParameterNames() {
-            return new Enumeration<String>() {
-
-                private Iterator<String> iterator = initParameters.keySet().iterator();
-
-                @Override
-                public boolean hasMoreElements() {
-                    return iterator.hasNext();
-                }
-
-                @Override
-                public String nextElement() {
-                    return iterator.next();
-                }
-            };
+            return new JerryEnumeration<>(initParameters.keySet().iterator());
         }
     }
 }

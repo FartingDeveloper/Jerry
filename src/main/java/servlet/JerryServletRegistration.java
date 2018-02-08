@@ -105,20 +105,7 @@ public class JerryServletRegistration extends JerryRegistration implements Servl
 
         @Override
         public Enumeration<String> getInitParameterNames() {
-            return new Enumeration<String>() {
-
-                Iterator<String> keys = initParameters.keySet().iterator();
-
-                @Override
-                public boolean hasMoreElements() {
-                    return keys.hasNext();
-                }
-
-                @Override
-                public String nextElement() {
-                    return keys.next();
-                }
-            };
+            return new JerryEnumeration<>(initParameters.keySet().iterator());
         }
 
         public JerryRequestDispatcher getJerryRequestDispatcher() throws ClassNotFoundException, InstantiationException, ServletException, IllegalAccessException {

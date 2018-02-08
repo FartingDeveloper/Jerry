@@ -24,10 +24,10 @@ public class JerryServletContext implements ServletContext {
     private Map<String, String> contextParameters;
     private Map<String, JerryServletRegistration> servletRegistrations;
     private Map<String, JerryFilterRegistration> filterRegistrations;
-    private Map<String, EventListener> listeners;
+    private Set<EventListener> listeners;
     private Set<String> resourcePaths;
     private Map<String, MimeType> mimeTypes;
-    private Map<String, ServletContext> contexts;
+    private Map<String, ? extends ServletContext> contexts;
     private ClassLoader classLoader;
 
     private Map<String, Object> attributes = new HashMap<>();
@@ -39,7 +39,7 @@ public class JerryServletContext implements ServletContext {
         this.contextParameters = new HashMap<>();
         this.servletRegistrations = new HashMap<>();
         this.filterRegistrations = new HashMap<>();
-        this.listeners = new HashMap<>();
+        this.listeners = new LinkedHashSet<>();
         this.resourcePaths = resourcePaths;
         this.mimeTypes = mimeTypes;
         this.contexts = contexts;
@@ -48,8 +48,8 @@ public class JerryServletContext implements ServletContext {
 
     public JerryServletContext(Map<String, String> contextParameters,
                                Map<String, JerryServletRegistration> servletRegistrations,
-                               Map<String, JerryFilterRegistration> filterRegistrations, Map<String, EventListener> listeners,
-                               Set<String> resourcePaths, Map<String, MimeType> mimeTypes, Map<String, ServletContext> contexts, ClassLoader classLoader){
+                               Map<String, JerryFilterRegistration> filterRegistrations, Set<EventListener> listeners,
+                               Set<String> resourcePaths, Map<String, MimeType> mimeTypes, Map<String, ? extends ServletContext> contexts, ClassLoader classLoader){
         this.contextPath = "";
         this.contextParameters = contextParameters;
         this.servletRegistrations = servletRegistrations;
@@ -63,8 +63,8 @@ public class JerryServletContext implements ServletContext {
 
     public JerryServletContext(String contextPath, Map<String, String> contextParameters,
                                Map<String, JerryServletRegistration> servletRegistrations,
-                               Map<String, JerryFilterRegistration> filterRegistrations, Map<String, EventListener> listeners,
-                               Set<String> resourcePaths, Map<String, MimeType> mimeTypes, Map<String, ServletContext> contexts, ClassLoader classLoader){
+                               Map<String, JerryFilterRegistration> filterRegistrations, Set<EventListener> listeners,
+                               Set<String> resourcePaths, Map<String, MimeType> mimeTypes, Map<String, ? extends ServletContext> contexts, ClassLoader classLoader){
         this.contextPath = contextPath;
         this.contextParameters = contextParameters;
         this.servletRegistrations = servletRegistrations;
@@ -167,31 +167,11 @@ public class JerryServletContext implements ServletContext {
     }
 
     public Enumeration<Servlet> getServlets() {
-        return new Enumeration<Servlet>() {
-            @Override
-            public boolean hasMoreElements() {
-                return false;
-            }
-
-            @Override
-            public Servlet nextElement() {
-                return null;
-            }
-        };
+        return new JerryEnumeration<>();
     }
 
     public Enumeration<String> getServletNames() {
-        return new Enumeration<String>() {
-            @Override
-            public boolean hasMoreElements() {
-                return false;
-            }
-
-            @Override
-            public String nextElement() {
-                return null;
-            }
-        };
+        return new JerryEnumeration<>();
     }
 
     public void log(String msg) {
@@ -368,6 +348,22 @@ public class JerryServletContext implements ServletContext {
 
     public Map<String, ? extends FilterRegistration> getFilterRegistrations() {
         return filterRegistrations;
+    }
+
+    public Set<EventListener> getListeners(){
+        return listeners;
+    }
+
+    public <T extends EventListener> Set<T> getListeners(Class<T> clazz){
+        Set<T> set = new LinkedHashSet<>();
+
+        for (EventListener listener : listeners){
+            if (clazz.isAssignableFrom(listener.getClass())){
+                set.add((T) listener);
+            }
+        }
+
+        return set;
     }
 
     public SessionCookieConfig getSessionCookieConfig() {

@@ -26,14 +26,14 @@ import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-public class ContextLoader implements Loader<Map<String, ServletContext>> {
+public class ContextLoader implements Loader<Map<String, JerryServletContext>> {
 
     private static final String WEB_INF = "WEB-INF";
     private static final String WEB_XML = "web.xml";
     private static final String LIB = "lib";
     private static final String CLASSES = "classes";
 
-    private Map<String, ServletContext> contexts = new HashMap<>();
+    private Map<String, JerryServletContext> contexts = new HashMap<>();
     private ClassLoader classLoader;
     private Set<String> resources;
 
@@ -41,7 +41,7 @@ public class ContextLoader implements Loader<Map<String, ServletContext>> {
 
     private WebXmlParser parser = new WebXmlParser();
 
-    public Map<String, ServletContext> load(String path) {
+    public Map<String, JerryServletContext> load(String path) {
         logger.debug("Loading contexts.");
         clear();
 
@@ -51,7 +51,7 @@ public class ContextLoader implements Loader<Map<String, ServletContext>> {
 
         for (File file : webapps.listFiles()){
             if(! isWar(file)){
-                ServletContext context = createContext(file);
+                JerryServletContext context = createContext(file);
                 contexts.put(file.getName(), context);
             }
         }
@@ -63,7 +63,7 @@ public class ContextLoader implements Loader<Map<String, ServletContext>> {
         contexts.clear();
     }
 
-    private ServletContext createContext(File file){
+    private JerryServletContext createContext(File file){
         logger.debug("Creating context:" + file.getName());
 
         File jars = new File(file.getAbsolutePath() + File.separator + WEB_INF + File.separator + LIB);
@@ -185,7 +185,9 @@ public class ContextLoader implements Loader<Map<String, ServletContext>> {
         private Map<String, Set<String>> filterServletNameMapping = new LinkedHashMap<>();
         private Map<Set<String>, Set<DispatcherType>> servletNameDispatcherTypes = new HashMap<>();
 
-        public ServletContext parseWebXml(File file){
+        private Set<EventListener> listeners = new LinkedHashSet<>();
+
+        public JerryServletContext parseWebXml(File file){
             clear();
 
             try {
@@ -216,21 +218,31 @@ public class ContextLoader implements Loader<Map<String, ServletContext>> {
                         }
                         case "filter-mapping": {
                             collectFilterMapping(node);
+                            break;
+                        }
+                        case "listener": {
+                            collectListeners(node);
+                            break;
                         }
                     }
                 }
-
-                addMappings();
             } catch (ParserConfigurationException e) {
                 e.printStackTrace();
             } catch (SAXException e) {
                 e.printStackTrace();
             } catch (IOException e) {
                 throw new BeanCreationException("Can't find" + file.getName());
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
             }
 
-            ServletContext servletContext = new JerryServletContext(file.getPath(), contextParams, servlets, filters,
-                    null, resources, null, null, classLoader);
+            addMappings();
+            JerryServletContext servletContext = new JerryServletContext(file.getPath(), contextParams, servlets, filters,
+                    listeners, resources, null, contexts, classLoader);
 
             return servletContext;
         }
@@ -265,6 +277,25 @@ public class ContextLoader implements Loader<Map<String, ServletContext>> {
                 filterRegistration.addMappingForServletNames(EnumSet.copyOf(dispatcherTypesServletNameMapping), false, servletNameMapping.toArray(new String[servletNameMapping.size()]));
 
                 filterRegistration.setInitialized(true);
+            }
+        }
+
+        private void loadListeners(){
+
+        }
+
+        private void collectListeners(Node node) throws ClassNotFoundException, IllegalAccessException, InstantiationException {
+            NodeList listener = node.getChildNodes();
+
+            for (int i = 0; i < listener.getLength(); i++){
+                Node listenerClass = listener.item(i);
+
+                switch (listenerClass.getNodeName()){
+                    case "listener-class": {
+                        Class<? extends EventListener> clazz = (Class<? extends EventListener>) classLoader.loadClass(listenerClass.getTextContent());
+                        listeners.add(clazz.newInstance());
+                    }
+                }
             }
         }
 
