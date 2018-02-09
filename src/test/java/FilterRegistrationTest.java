@@ -1,7 +1,7 @@
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import servlet.JerryFilterRegistration;
+import servlet.registration.JerryFilterRegistration;
 
 import javax.servlet.DispatcherType;
 import java.util.Arrays;

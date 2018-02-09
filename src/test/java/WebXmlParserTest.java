@@ -1,18 +1,11 @@
 import loader.ContextLoader;
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnit;
-import servlet.JerryServletContext;
-import servlet.JerryServletRegistration;
+import servlet.context.JerryServletContext;
 
 
 import javax.servlet.*;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;

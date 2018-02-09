@@ -1,4 +1,4 @@
-package servlet;
+package servlet.registration;
 
 import javax.servlet.Registration;
 import java.util.HashMap;

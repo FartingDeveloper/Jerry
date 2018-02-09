@@ -1,8 +1,7 @@
-package servlet;
+package servlet.registration;
 
 import javax.servlet.FilterRegistration;
 import java.util.Map;
-import java.util.Set;
 
 public class JerryFilterRegistrationDynamic extends JerryFilterRegistration implements FilterRegistration.Dynamic {
 

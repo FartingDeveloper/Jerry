@@ -19,11 +19,20 @@ public class JerryServletRequest implements ServletRequest {
     private HttpRequest request;
     private ServletContext servletContext;
     private Map<String, Object> attributes;
+    private List<ServletRequestAttributeListener> listeners;
 
     public JerryServletRequest(HttpRequest request, ServletContext servletContext){
         this.request = request;
         this.servletContext = servletContext;
         attributes = new HashMap<>();
+        listeners = new ArrayList<>();
+    }
+
+    public JerryServletRequest(HttpRequest request, ServletContext servletContext, List<ServletRequestAttributeListener> listeners){
+        this.request = request;
+        this.servletContext = servletContext;
+        attributes = new HashMap<>();
+        this.listeners = listeners;
     }
 
     @Override
@@ -94,6 +103,26 @@ public class JerryServletRequest implements ServletRequest {
 
     @Override
     public Enumeration<String> getParameterNames() {
+        JerryEnumeration<String> result = null;
+        try {
+            List<NameValuePair> parameters = URLEncodedUtils.parse(new URI(
+                    request.getRequestLine().getUri()), Charset.forName(getCharacterEncoding()));
+            if(parameters != null){
+                List<String> list = new ArrayList<>();
+                for (NameValuePair parameter : parameters){
+                    list.add(parameter.getValue());
+                }
+                result = new JerryEnumeration<>(list.iterator());
+            }
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    @Override
+    public String[] getParameterValues(String name) {
+        String[] result = null;
         try {
             List<NameValuePair> parameters = URLEncodedUtils.parse(new URI(
                     request.getRequestLine().getUri()), Charset.forName(getCharacterEncoding()));
@@ -102,22 +131,37 @@ public class JerryServletRequest implements ServletRequest {
                 for (NameValuePair parameter : parameters){
                     list.add(parameter.getName());
                 }
-                return new JerryEnumeration<>(list.iterator());
+                result = list.toArray(new String[list.size()]);
             }
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
-       return new JerryEnumeration<>();
-    }
-
-    @Override
-    public String[] getParameterValues(String name) {
-        return new String[0];
+        return result;
     }
 
     @Override
     public Map<String, String[]> getParameterMap() {
-        return null;
+        Map<String, String[]> result = new HashMap();
+        try {
+            List<NameValuePair> parameters = URLEncodedUtils.parse(new URI(
+                    request.getRequestLine().getUri()), Charset.forName(getCharacterEncoding()));
+            if(parameters != null){
+                for (NameValuePair parameter : parameters){
+                    if(result.containsKey(parameter.getName())){
+                        String[] values = result.get(parameter.getName());
+                        String[] newValues = new String[values.length + 1];
+                        for (int i = 0; i < values.length; i++){
+                            newValues[i] = values[i];
+                        }
+                        newValues[newValues.length] = parameter.getValue();
+                        result.put(parameter.getName(), newValues);
+                    }
+                }
+            }
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+        return result;
     }
 
     @Override
@@ -169,11 +213,23 @@ public class JerryServletRequest implements ServletRequest {
 
     @Override
     public void setAttribute(String name, Object o) {
+        if(attributes.containsKey(name)){
+            for (ServletRequestAttributeListener listener : listeners){
+                listener.attributeReplaced(new ServletRequestAttributeEvent(servletContext, this, name, o));
+            }
+        } else{
+            for (ServletRequestAttributeListener listener : listeners){
+                listener.attributeAdded(new ServletRequestAttributeEvent(servletContext, this, name, o));
+            }
+        }
         attributes.put(name, o);
     }
 
     @Override
     public void removeAttribute(String name) {
+        for (ServletRequestAttributeListener listener : listeners){
+            listener.attributeRemoved(new ServletRequestAttributeEvent(servletContext, this, name, attributes.get(name)));
+        }
         attributes.remove(name);
     }
 
@@ -224,13 +280,7 @@ public class JerryServletRequest implements ServletRequest {
 
     @Override
     public String getLocalName() {
-        for(HeaderElement element : request.getFirstHeader("Forwarded").getElements()){
-            NameValuePair param = element.getParameterByName("host");
-            if(param != null){
-                return param.getValue();
-            }
-        }
-        return null;
+        return getServerName();
     }
 
     @Override
@@ -246,7 +296,7 @@ public class JerryServletRequest implements ServletRequest {
 
     @Override
     public int getLocalPort() {
-        return 0;
+        return getServerPort();
     }
 
     @Override

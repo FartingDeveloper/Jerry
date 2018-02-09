@@ -7,13 +7,12 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-import servlet.JerryFilterRegistration;
-import servlet.JerryServletContext;
-import servlet.JerryServletRegistration;
-import servlet.JerryServletRegistrationDynamic;
+import servlet.registration.JerryFilterRegistration;
+import servlet.context.JerryServletContext;
+import servlet.registration.JerryServletRegistration;
+import servlet.registration.JerryServletRegistrationDynamic;
 
 import javax.servlet.DispatcherType;
-import javax.servlet.ServletContext;
 import javax.servlet.ServletSecurityElement;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;

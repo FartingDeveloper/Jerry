@@ -1,7 +1,6 @@
-package servlet;
+package servlet.registration;
 
 import javax.servlet.*;
-import java.io.IOException;
 import java.util.*;
 
 public class JerryServletRegistrationDynamic extends JerryServletRegistration implements ServletRegistration.Dynamic{

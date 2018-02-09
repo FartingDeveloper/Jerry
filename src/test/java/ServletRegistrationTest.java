@@ -1,7 +1,7 @@
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import servlet.JerryServletRegistration;
+import servlet.registration.JerryServletRegistration;
 
 import javax.servlet.ServletRegistration;
 import java.util.Collection;

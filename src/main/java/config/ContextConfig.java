@@ -7,9 +7,8 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import servlet.JerryServletContext;
+import servlet.context.JerryServletContext;
 
-import javax.servlet.ServletContext;
 import java.io.File;
 import java.net.URISyntaxException;
 import java.util.Map;

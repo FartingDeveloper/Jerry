@@ -1,6 +1,7 @@
-package servlet;
+package servlet.registration;
 
 import org.apache.logging.log4j.LogManager;
+import servlet.JerryEnumeration;
 
 import javax.servlet.*;
 import java.io.IOException;
@@ -14,7 +15,7 @@ public class JerryServletRegistration extends JerryRegistration implements Servl
     private Set<String> mappings;
     protected JerryServletRegistration.JerryServletConfig config;
 
-    protected org.apache.logging.log4j.Logger logger = LogManager.getLogger("servlet.JerryServletRegistration");
+    protected org.apache.logging.log4j.Logger logger = LogManager.getLogger("servlet.registration.JerryServletRegistration");
 
     public JerryServletRegistration(String servletName, String servletClassName){
         super(servletName, servletClassName);

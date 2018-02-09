@@ -1,12 +1,20 @@
-package servlet;
+package servlet.context;
 
 
 import org.apache.logging.log4j.LogManager;
+import servlet.JerryEnumeration;
+import servlet.registration.JerryFilterRegistration;
+import servlet.registration.JerryFilterRegistrationDynamic;
+import servlet.registration.JerryServletRegistration;
+import servlet.registration.JerryServletRegistrationDynamic;
 
 import javax.activation.MimeType;
-import javax.activation.MimetypesFileTypeMap;
 import javax.servlet.*;
 import javax.servlet.descriptor.JspConfigDescriptor;
+import javax.servlet.http.HttpSessionActivationListener;
+import javax.servlet.http.HttpSessionAttributeListener;
+import javax.servlet.http.HttpSessionBindingListener;
+import javax.servlet.http.HttpSessionListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -21,25 +29,37 @@ public class JerryServletContext implements ServletContext {
     private boolean initialized;
 
     private String contextPath;
+
     private Map<String, String> contextParameters;
+
     private Map<String, JerryServletRegistration> servletRegistrations;
     private Map<String, JerryFilterRegistration> filterRegistrations;
-    private Set<EventListener> listeners;
+
+    private Set<ServletRequestAttributeListener> requestAttributeListeners = new LinkedHashSet<>();
+    private Set<HttpSessionAttributeListener> sessionAttributeListeners = new LinkedHashSet<>();
+    private Set<HttpSessionBindingListener> sessionBindingListeners = new LinkedHashSet<>();
+    private Set<HttpSessionActivationListener> sessionActivationListeners = new LinkedHashSet<>();
+    private Set<ServletContextAttributeListener> servletContextAttributeListeners = new LinkedHashSet<>();
+    private Set<ServletContextListener> servletContextListeners = new LinkedHashSet<>();
+    private Set<HttpSessionListener> sessionListeners = new LinkedHashSet<>();
+    private Set<ServletRequestListener> requestListeners = new LinkedHashSet<>();
+
     private Set<String> resourcePaths;
     private Map<String, MimeType> mimeTypes;
+
     private Map<String, ? extends ServletContext> contexts;
+
     private ClassLoader classLoader;
 
     private Map<String, Object> attributes = new HashMap<>();
 
-    private org.apache.logging.log4j.Logger logger = LogManager.getLogger("servlet.JerryServletContext");
+    private org.apache.logging.log4j.Logger logger = LogManager.getLogger("servlet.context.JerryServletContext");
 
     public JerryServletContext(Set<String> resourcePaths, Map<String, MimeType> mimeTypes, Map<String, ServletContext> contexts, ClassLoader classLoader){
         this.contextPath = "";
         this.contextParameters = new HashMap<>();
         this.servletRegistrations = new HashMap<>();
         this.filterRegistrations = new HashMap<>();
-        this.listeners = new LinkedHashSet<>();
         this.resourcePaths = resourcePaths;
         this.mimeTypes = mimeTypes;
         this.contexts = contexts;
@@ -54,11 +74,11 @@ public class JerryServletContext implements ServletContext {
         this.contextParameters = contextParameters;
         this.servletRegistrations = servletRegistrations;
         this.filterRegistrations = filterRegistrations;
-        this.listeners = listeners;
         this.resourcePaths = resourcePaths;
         this.mimeTypes = mimeTypes;
         this.contexts = contexts;
         this.classLoader = classLoader;
+        init(listeners);
     }
 
     public JerryServletContext(String contextPath, Map<String, String> contextParameters,
@@ -69,11 +89,11 @@ public class JerryServletContext implements ServletContext {
         this.contextParameters = contextParameters;
         this.servletRegistrations = servletRegistrations;
         this.filterRegistrations = filterRegistrations;
-        this.listeners = listeners;
         this.resourcePaths = resourcePaths;
         this.mimeTypes = mimeTypes;
         this.contexts = contexts;
         this.classLoader = classLoader;
+        init(listeners);
     }
 
     public String getContextPath() {
@@ -350,22 +370,6 @@ public class JerryServletContext implements ServletContext {
         return filterRegistrations;
     }
 
-    public Set<EventListener> getListeners(){
-        return listeners;
-    }
-
-    public <T extends EventListener> Set<T> getListeners(Class<T> clazz){
-        Set<T> set = new LinkedHashSet<>();
-
-        for (EventListener listener : listeners){
-            if (clazz.isAssignableFrom(listener.getClass())){
-                set.add((T) listener);
-            }
-        }
-
-        return set;
-    }
-
     public SessionCookieConfig getSessionCookieConfig() {
         return null;
     }
@@ -396,6 +400,38 @@ public class JerryServletContext implements ServletContext {
 
     public <T extends EventListener> T createListener(Class<T> clazz) throws ServletException {
         return null;
+    }
+
+    public Set<ServletRequestAttributeListener> getRequestAttributeListeners() {
+        return requestAttributeListeners;
+    }
+
+    public Set<HttpSessionAttributeListener> getSessionAttributeListeners() {
+        return sessionAttributeListeners;
+    }
+
+    public Set<HttpSessionBindingListener> getSessionBindingListeners() {
+        return sessionBindingListeners;
+    }
+
+    public Set<HttpSessionActivationListener> getSessionActivationListeners() {
+        return sessionActivationListeners;
+    }
+
+    public Set<ServletContextAttributeListener> getServletContextAttributeListeners() {
+        return servletContextAttributeListeners;
+    }
+
+    public Set<ServletContextListener> getServletContextListeners() {
+        return servletContextListeners;
+    }
+
+    public Set<HttpSessionListener> getSessionListeners() {
+        return sessionListeners;
+    }
+
+    public Set<ServletRequestListener> getRequestListeners() {
+        return requestListeners;
     }
 
     public JspConfigDescriptor getJspConfigDescriptor() {
@@ -448,10 +484,56 @@ public class JerryServletContext implements ServletContext {
     }
 
     public void setInitialized(boolean initialized) {
+
+        for (ServletContextListener contextListener : servletContextListeners){
+            contextListener.contextInitialized(new ServletContextEvent(this));
+        }
+
         this.initialized = initialized;
     }
 
-    public void init(){
+    private void init(Set<EventListener> listeners){
+        for (EventListener listener : listeners){
+            addListenerToSet(listener);
+        }
 
+        for (ServletContextListener contextListener : servletContextListeners){
+            contextListener.contextInitialized(new ServletContextEvent(this));
+        }
+
+        initialized = true;
+    }
+
+    public void destroy(){
+        for (ServletContextListener contextListener : servletContextListeners){
+            contextListener.contextDestroyed(new ServletContextEvent(this));
+        }
+    }
+
+    private void addListenerToSet(EventListener listener){
+            if (listener instanceof ServletRequestAttributeListener){
+                requestAttributeListeners.add((ServletRequestAttributeListener) listener);
+            }
+            else if(listener instanceof HttpSessionAttributeListener){
+                sessionAttributeListeners.add((HttpSessionAttributeListener) listener);
+            }
+            else if(listener instanceof HttpSessionBindingListener){
+                sessionBindingListeners.add((HttpSessionBindingListener) listener);
+            }
+            else if(listener instanceof HttpSessionActivationListener){
+                sessionActivationListeners.add((HttpSessionActivationListener) listener);
+            }
+            else if(listener instanceof ServletContextAttributeListener){
+                servletContextAttributeListeners.add((ServletContextAttributeListener) listener);
+            }
+            else if(listener instanceof ServletContextListener){
+                servletContextListeners.add((ServletContextListener) listener);
+            }
+            else if(listener instanceof HttpSessionListener){
+                sessionListeners.add((HttpSessionListener) listener);
+            }
+            else if(listener instanceof ServletRequestListener){
+                requestListeners.add((ServletRequestListener) listener);
+            }
     }
 }

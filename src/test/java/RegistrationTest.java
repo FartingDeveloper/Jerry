@@ -1,7 +1,7 @@
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import servlet.JerryRegistration;
+import servlet.registration.JerryRegistration;
 
 import javax.servlet.Registration;
 import java.util.HashMap;

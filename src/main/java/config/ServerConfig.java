@@ -12,10 +12,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.PropertySource;
-import servlet.JerryServletContext;
+import servlet.context.JerryServletContext;
 
-import javax.servlet.FilterRegistration;
-import javax.servlet.ServletContext;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.HashMap;

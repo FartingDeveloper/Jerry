@@ -1,4 +1,6 @@
-package servlet;
+package servlet.registration;
+
+import servlet.JerryEnumeration;
 
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterConfig;
