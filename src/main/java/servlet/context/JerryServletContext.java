@@ -47,6 +47,11 @@ public class JerryServletContext implements ServletContext {
     private Set<String> resourcePaths;
     private Map<String, MimeType> mimeTypes;
 
+    private int sessionTimeout;
+
+    private String requestEncoding;
+    private String responseEncoding;
+
     private Map<String, ? extends ServletContext> contexts;
 
     private ClassLoader classLoader;
@@ -60,6 +65,7 @@ public class JerryServletContext implements ServletContext {
         this.contextParameters = new HashMap<>();
         this.servletRegistrations = new HashMap<>();
         this.filterRegistrations = new HashMap<>();
+        this.sessionTimeout = 43200;
         this.resourcePaths = resourcePaths;
         this.mimeTypes = mimeTypes;
         this.contexts = contexts;
@@ -78,7 +84,7 @@ public class JerryServletContext implements ServletContext {
         this.mimeTypes = mimeTypes;
         this.contexts = contexts;
         this.classLoader = classLoader;
-        init(listeners);
+        sortListeners(listeners);
     }
 
     public JerryServletContext(String contextPath, Map<String, String> contextParameters,
@@ -93,7 +99,7 @@ public class JerryServletContext implements ServletContext {
         this.mimeTypes = mimeTypes;
         this.contexts = contexts;
         this.classLoader = classLoader;
-        init(listeners);
+        sortListeners(listeners);
     }
 
     public String getContextPath() {
@@ -269,10 +275,24 @@ public class JerryServletContext implements ServletContext {
 
     public void setAttribute(String name, Object object) {
         if(name == null) throw new NullPointerException();
+
+        if (attributes.containsKey(name)){
+            for (ServletContextAttributeListener listener : servletContextAttributeListeners){
+                listener.attributeReplaced(new ServletContextAttributeEvent(this, name, object));
+            }
+        }else {
+            for (ServletContextAttributeListener listener : servletContextAttributeListeners){
+                listener.attributeAdded(new ServletContextAttributeEvent(this, name, object));
+            }
+        }
+
         attributes.put(name, object);
     }
 
     public void removeAttribute(String name) {
+        for (ServletContextAttributeListener listener : servletContextAttributeListeners){
+            listener.attributeRemoved(new ServletContextAttributeEvent(this, name, attributes.get(name)));
+        }
         attributes.remove(name);
     }
 
@@ -387,19 +407,60 @@ public class JerryServletContext implements ServletContext {
     }
 
     public void addListener(String className) {
+        if(initialized){
+            throw new IllegalStateException();
+        }
 
+        try {
+            Class<EventListener> listenerClass = (Class<EventListener>) classLoader.loadClass(className);
+            if(! addListenerToSet(listenerClass.newInstance())){
+                throw new IllegalArgumentException();
+            }
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        }
     }
 
     public <T extends EventListener> void addListener(T t) {
+        if(initialized){
+            throw new IllegalStateException();
+        }
 
+        if(! addListenerToSet(t)){
+            throw new IllegalArgumentException();
+        }
     }
 
     public void addListener(Class<? extends EventListener> listenerClass) {
+        if(initialized){
+            throw new IllegalStateException();
+        }
 
+        try {
+            if(! addListenerToSet(listenerClass.newInstance())){
+                throw new IllegalArgumentException();
+            }
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        }
     }
 
     public <T extends EventListener> T createListener(Class<T> clazz) throws ServletException {
-        return null;
+        T listener = null;
+        try {
+            listener = clazz.newInstance();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return listener;
     }
 
     public Set<ServletRequestAttributeListener> getRequestAttributeListeners() {
@@ -451,27 +512,27 @@ public class JerryServletContext implements ServletContext {
     }
 
     public int getSessionTimeout() {
-        return 0;
+        return sessionTimeout;
     }
 
     public void setSessionTimeout(int sessionTimeout) {
-
+        this.sessionTimeout = sessionTimeout;
     }
 
     public String getRequestCharacterEncoding() {
-        return null;
+        return requestEncoding;
     }
 
     public void setRequestCharacterEncoding(String encoding) {
-
+        requestEncoding = encoding;
     }
 
     public String getResponseCharacterEncoding() {
-        return null;
+        return responseEncoding;
     }
 
     public void setResponseCharacterEncoding(String encoding) {
-
+        responseEncoding = encoding;
     }
 
     private void check(String... params){
@@ -483,19 +544,13 @@ public class JerryServletContext implements ServletContext {
         if(initialized) throw new IllegalStateException();
     }
 
-    public void setInitialized(boolean initialized) {
-
-        for (ServletContextListener contextListener : servletContextListeners){
-            contextListener.contextInitialized(new ServletContextEvent(this));
-        }
-
-        this.initialized = initialized;
-    }
-
-    private void init(Set<EventListener> listeners){
+    private void sortListeners(Set<EventListener> listeners){
         for (EventListener listener : listeners){
             addListenerToSet(listener);
         }
+    }
+
+    public void init(){
 
         for (ServletContextListener contextListener : servletContextListeners){
             contextListener.contextInitialized(new ServletContextEvent(this));
@@ -510,30 +565,43 @@ public class JerryServletContext implements ServletContext {
         }
     }
 
-    private void addListenerToSet(EventListener listener){
+    public void setInitialized(boolean initialized){
+        this.initialized = initialized;
+    }
+
+    private boolean addListenerToSet(EventListener listener){
             if (listener instanceof ServletRequestAttributeListener){
                 requestAttributeListeners.add((ServletRequestAttributeListener) listener);
+                return true;
             }
             else if(listener instanceof HttpSessionAttributeListener){
                 sessionAttributeListeners.add((HttpSessionAttributeListener) listener);
+                return true;
             }
             else if(listener instanceof HttpSessionBindingListener){
                 sessionBindingListeners.add((HttpSessionBindingListener) listener);
+                return true;
             }
             else if(listener instanceof HttpSessionActivationListener){
                 sessionActivationListeners.add((HttpSessionActivationListener) listener);
+                return true;
             }
             else if(listener instanceof ServletContextAttributeListener){
                 servletContextAttributeListeners.add((ServletContextAttributeListener) listener);
+                return true;
             }
             else if(listener instanceof ServletContextListener){
                 servletContextListeners.add((ServletContextListener) listener);
+                return true;
             }
             else if(listener instanceof HttpSessionListener){
                 sessionListeners.add((HttpSessionListener) listener);
+                return true;
             }
             else if(listener instanceof ServletRequestListener){
                 requestListeners.add((ServletRequestListener) listener);
+                return true;
             }
+            return false;
     }
 }

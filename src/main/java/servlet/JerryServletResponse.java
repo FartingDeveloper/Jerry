@@ -1,6 +1,5 @@
 package servlet;
 
-import com.sun.scenario.effect.impl.prism.PrImage;
 import org.apache.http.HttpResponse;
 
 import javax.servlet.ServletContext;

@@ -63,6 +63,7 @@ public class WebXmlParserTest {
         URL url = parser.getClass().getClassLoader().getResource("web.xml");
         File file = new File(url.toURI());
         servletContext = (JerryServletContext) method.invoke(parser, file);
+        servletContext.init();
     }
 
     @Test
