@@ -1,9 +1,11 @@
-package servlet;
+package servlet.request;
 
 import org.apache.http.HeaderElement;
 import org.apache.http.HttpRequest;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
+import servlet.JerryEnumeration;
+import servlet.context.JerryServletContext;
 
 import javax.servlet.*;
 import java.io.BufferedReader;
@@ -16,23 +18,18 @@ import java.util.*;
 
 public class JerryServletRequest implements ServletRequest {
 
+    private static final String COLON = ":";
+
     private HttpRequest request;
     private ServletContext servletContext;
     private Map<String, Object> attributes;
-    private List<ServletRequestAttributeListener> listeners;
+    private Set<ServletRequestAttributeListener> listeners;
 
-    public JerryServletRequest(HttpRequest request, ServletContext servletContext){
+    public JerryServletRequest(HttpRequest request, JerryServletContext servletContext){
         this.request = request;
         this.servletContext = servletContext;
         attributes = new HashMap<>();
-        listeners = new ArrayList<>();
-    }
-
-    public JerryServletRequest(HttpRequest request, ServletContext servletContext, List<ServletRequestAttributeListener> listeners){
-        this.request = request;
-        this.servletContext = servletContext;
-        attributes = new HashMap<>();
-        this.listeners = listeners;
+        listeners = servletContext.getRequestAttributeListeners();
     }
 
     @Override
@@ -47,17 +44,17 @@ public class JerryServletRequest implements ServletRequest {
 
     @Override
     public String getCharacterEncoding() {
-        return request.getFirstHeader("Accept-Encoding").getName();
+        return request.getFirstHeader("Accept-Charset").getValue();
     }
 
     @Override
     public void setCharacterEncoding(String env) throws UnsupportedEncodingException {
-        request.setHeader("Accept-Encoding", env);
+        request.setHeader("Accept-Charset", env);
     }
 
     @Override
     public int getContentLength() {
-        Integer length = Integer.valueOf(request.getFirstHeader("Content-Length").getName());
+        Integer length = Integer.valueOf(request.getFirstHeader("Content-Length").getValue());
         if(length == null || length < 0){
             return -1;
         }
@@ -66,8 +63,8 @@ public class JerryServletRequest implements ServletRequest {
 
     @Override
     public long getContentLengthLong() {
-        Long length = Long.valueOf(request.getFirstHeader("Content-Length").getName());
-        if(length == null){
+        Long length = Long.valueOf(request.getFirstHeader("Content-Length").getValue());
+        if(length == null|| length < 0){
             return -1;
         }
         return length;
@@ -75,7 +72,7 @@ public class JerryServletRequest implements ServletRequest {
 
     @Override
     public String getContentType() {
-        return request.getFirstHeader("Content-Type").getName();
+        return request.getFirstHeader("Content-Type").getValue();
     }
 
     @Override
@@ -110,7 +107,7 @@ public class JerryServletRequest implements ServletRequest {
             if(parameters != null){
                 List<String> list = new ArrayList<>();
                 for (NameValuePair parameter : parameters){
-                    list.add(parameter.getValue());
+                    list.add(parameter.getName());
                 }
                 result = new JerryEnumeration<>(list.iterator());
             }
@@ -129,7 +126,9 @@ public class JerryServletRequest implements ServletRequest {
             if(parameters != null){
                 List<String> list = new ArrayList<>();
                 for (NameValuePair parameter : parameters){
-                    list.add(parameter.getName());
+                    if(parameter.getName().equals(name)){
+                        list.add(parameter.getValue());
+                    }
                 }
                 result = list.toArray(new String[list.size()]);
             }
@@ -166,7 +165,7 @@ public class JerryServletRequest implements ServletRequest {
 
     @Override
     public String getProtocol() {
-        return request.getProtocolVersion().getProtocol();
+        return request.getProtocolVersion().toString();
     }
 
     @Override
@@ -182,12 +181,22 @@ public class JerryServletRequest implements ServletRequest {
 
     @Override
     public String getServerName() {
-        return request.getFirstHeader("Host").getName();
+        String name = request.getFirstHeader("Host").getValue();
+        int index = name.lastIndexOf(COLON);
+        if(index != -1){
+            return name.substring(0, index);
+        }
+        return name;
     }
 
     @Override
     public int getServerPort() {
-        return Integer.valueOf(request.getFirstHeader("Host").getValue());
+        String port = request.getFirstHeader("Host").getValue();
+        int index = port.lastIndexOf(COLON);
+        if(index != -1){
+            return Integer.valueOf(port.substring(index + 1, port.length()));
+        }
+        return Integer.valueOf(port);
     }
 
     @Override
@@ -208,7 +217,7 @@ public class JerryServletRequest implements ServletRequest {
 
     @Override
     public String getRemoteHost() {
-        return null;
+        return getRemoteAddr();
     }
 
     @Override
@@ -235,18 +244,17 @@ public class JerryServletRequest implements ServletRequest {
 
     @Override
     public Locale getLocale() {
-        String locale = request.getFirstHeader("Accept-Language").getValue();
-        if(locale == null){
-            return Locale.getDefault();
-        }
-        return Locale.forLanguageTag(locale);
+        HeaderElement element = request.getFirstHeader("Accept-Language").getElements()[0];
+        int index = element.getName().indexOf("_");
+        return new Locale(element.getName().substring(0, index), element.getName().substring(index, element.getName().length()));
     }
 
     @Override
     public Enumeration<Locale> getLocales() {
         List<Locale> list = new ArrayList<>();
         for(HeaderElement element : request.getFirstHeader("Accept-Language").getElements()){
-            list.add(Locale.forLanguageTag(element.getName()));
+            int index = element.getName().indexOf("_");
+            list.add(new Locale(element.getName().substring(0, index), element.getName().substring(index + 1, element.getName().length())));
         }
 
         return new JerryEnumeration<>(list.iterator());
@@ -269,10 +277,12 @@ public class JerryServletRequest implements ServletRequest {
 
     @Override
     public int getRemotePort() {
-        for(HeaderElement element : request.getFirstHeader("Forwarded").getElements()){
-            NameValuePair param = element.getParameterByName("by");
-            if(param != null){
-                return Integer.valueOf(param.getValue());
+        HeaderElement element  = request.getFirstHeader("Forwarded").getElements()[0];
+        NameValuePair param = element.getParameterByName("by");
+        if(param != null){
+            int index = param.getValue().indexOf(COLON);
+            if(index != -1){
+                return Integer.valueOf(param.getValue().substring(index + 1, param.getValue().length()));
             }
         }
         return 0;

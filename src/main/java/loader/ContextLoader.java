@@ -2,6 +2,8 @@ package loader;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.util.KeyValuePair;
+import org.omg.CORBA.NameValuePair;
 import org.springframework.beans.factory.BeanCreationException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -9,7 +11,6 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import servlet.registration.JerryFilterRegistration;
 import servlet.context.JerryServletContext;
-import servlet.registration.JerryServletRegistration;
 import servlet.registration.JerryServletRegistrationDynamic;
 
 import javax.servlet.DispatcherType;
@@ -171,23 +172,12 @@ public class ContextLoader implements Loader<Map<String, JerryServletContext>> {
 
     private class WebXmlParser {
 
-        private Map<String, String> contextParams = new HashMap<>();
-
-        private Map<String, JerryServletRegistration> servlets = new HashMap<>();
-        private Map<String, Set<String>> servletMapping = new LinkedHashMap<>();
-
-        private Map<String, JerryFilterRegistration> filters = new HashMap<>();
-
-        private Map<String, Set<String>> filterMapping = new LinkedHashMap<>();
-        private Map<Set<String>, Set<DispatcherType>> dispatcherTypes = new HashMap<>();
-
-        private Map<String, Set<String>> filterServletNameMapping = new LinkedHashMap<>();
-        private Map<Set<String>, Set<DispatcherType>> servletNameDispatcherTypes = new HashMap<>();
-
-        private Set<EventListener> listeners = new LinkedHashSet<>();
+        private JerryServletContext servletContext;
 
         public JerryServletContext parseWebXml(File file){
-            clear();
+
+            servletContext = new JerryServletContext(contexts, classLoader);
+            servletContext.setContextPath(file.getName());
 
             try {
                 DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
@@ -200,7 +190,8 @@ public class ContextLoader implements Loader<Map<String, JerryServletContext>> {
                     Node node = childNodes.item(i);
                     switch (node.getNodeName()){
                         case "context-param": {
-                            collectParams(node, contextParams);
+                            KeyValuePair pair = collectParams(node);
+                            servletContext.setInitParameter(pair.getKey(), pair.getValue());
                             break;
                         }
                         case "servlet": {
@@ -239,48 +230,7 @@ public class ContextLoader implements Loader<Map<String, JerryServletContext>> {
                 e.printStackTrace();
             }
 
-            addMappings();
-            JerryServletContext servletContext = new JerryServletContext(file.getPath(), contextParams, servlets, filters,
-                    listeners, resources, null, contexts, classLoader);
-
             return servletContext;
-        }
-
-        private void clear(){
-            contextParams.clear();
-            servlets.clear();
-            filters.clear();
-            servletMapping.clear();
-            filterMapping.clear();
-            filterServletNameMapping.clear();
-        }
-
-        private void addMappings(){
-            for (String servletName : servlets.keySet()){
-                JerryServletRegistration servlet = servlets.get(servletName);
-
-                Set<String> mapping = servletMapping.get(servletName);
-                servlet.addMapping(mapping.toArray(new String[mapping.size()]));
-                servlet.setInitialized(true);
-            }
-
-            for (String filterName : filters.keySet()){
-                JerryFilterRegistration filterRegistration = filters.get(filterName);
-
-                Set<String> mapping = filterMapping.get(filterName);
-                Set<DispatcherType> dispatcherTypesMapping = dispatcherTypes.get(mapping);
-                filterRegistration.addMappingForUrlPatterns(EnumSet.copyOf(dispatcherTypesMapping), false, mapping.toArray(new String[mapping.size()]));
-
-                Set<String> servletNameMapping = filterServletNameMapping.get(filterName);
-                Set<DispatcherType> dispatcherTypesServletNameMapping = servletNameDispatcherTypes.get(servletNameMapping);
-                filterRegistration.addMappingForServletNames(EnumSet.copyOf(dispatcherTypesServletNameMapping), false, servletNameMapping.toArray(new String[servletNameMapping.size()]));
-
-                filterRegistration.setInitialized(true);
-            }
-        }
-
-        private void loadListeners(){
-
         }
 
         private void collectListeners(Node node) throws ClassNotFoundException, IllegalAccessException, InstantiationException {
@@ -292,7 +242,7 @@ public class ContextLoader implements Loader<Map<String, JerryServletContext>> {
                 switch (listenerClass.getNodeName()){
                     case "listener-class": {
                         Class<? extends EventListener> clazz = (Class<? extends EventListener>) classLoader.loadClass(listenerClass.getTextContent());
-                        listeners.add(clazz.newInstance());
+                        servletContext.addListener(clazz);
                     }
                 }
             }
@@ -318,14 +268,16 @@ public class ContextLoader implements Loader<Map<String, JerryServletContext>> {
                         break;
                     }
                     case "init-param": {
-                        collectParams(node, initParams);
+                        KeyValuePair pair = collectParams(node);
+                        initParams.put(pair.getKey(), pair.getValue());
                         break;
                     }
                 }
             }
 
             JerryFilterRegistration jerryFilterRegistration = new JerryFilterRegistration(filterName, filterClass, initParams);
-            filters.put(filterName, jerryFilterRegistration);
+
+            servletContext.addFilterRegistration(jerryFilterRegistration);
         }
 
         private void collectFilterMapping(Node mapping){
@@ -356,11 +308,11 @@ public class ContextLoader implements Loader<Map<String, JerryServletContext>> {
                 }
             }
 
-            filterMapping.put(filterName, filterPatterns);
-            dispatcherTypes.put(filterPatterns, dispatcherTypeSet);
+            servletContext.getFilterRegistration(filterName).addMappingForUrlPatterns(EnumSet.copyOf(dispatcherTypeSet),
+                    false, filterPatterns.toArray(new String[filterPatterns.size()]));
 
-            filterServletNameMapping.put(filterName, servletNames);
-            servletNameDispatcherTypes.put(servletNames, dispatcherTypeSet);
+            servletContext.getFilterRegistration(filterName).addMappingForServletNames(EnumSet.copyOf(dispatcherTypeSet),
+                    false, servletNames.toArray(new String[servletNames.size()]));
     }
 
         private void collectServlets(Node obj){
@@ -390,7 +342,8 @@ public class ContextLoader implements Loader<Map<String, JerryServletContext>> {
                         break;
                     }
                     case "init-param": {
-                        collectParams(node, initParams);
+                        KeyValuePair pair = collectParams(node);
+                        initParams.put(pair.getKey(), pair.getValue());
                         break;
                     }
                     case "load-on-startup":{
@@ -412,8 +365,7 @@ public class ContextLoader implements Loader<Map<String, JerryServletContext>> {
             jerryServletRegistration.setLoadOnStartup(loadOnStartup);
             jerryServletRegistration.setRunAsRole(role);
 
-            servlets.put(servletName, jerryServletRegistration);
-
+            servletContext.addServletRegistration(jerryServletRegistration);
         }
 
         private void collectServletMapping(Node mapping){
@@ -434,10 +386,10 @@ public class ContextLoader implements Loader<Map<String, JerryServletContext>> {
                 }
             }
 
-            servletMapping.put(servletName, servletPatterns);
+            servletContext.getServletRegistration(servletName).addMapping(servletPatterns.toArray(new String[servletPatterns.size()]));
         }
 
-        private void collectParams(Node parameters, Map<String, String> map){
+        private KeyValuePair collectParams(Node parameters){
             NodeList params = parameters.getChildNodes();
 
             String name = null;
@@ -454,7 +406,7 @@ public class ContextLoader implements Loader<Map<String, JerryServletContext>> {
                         break;
                 }
             }
-            map.put(name, value);
+            return new KeyValuePair(name, value);
         }
     }
 }

@@ -1,5 +1,6 @@
 package config;
 
+import org.apache.http.HeaderElement;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.config.SocketConfig;
@@ -11,13 +12,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.PropertySource;
-import servlet.JerryServletRequest;
-import servlet.JerryServletResponse;
+import servlet.request.JerryServletRequest;
+import servlet.response.JerryServletResponse;
 import servlet.context.JerryServletContext;
 
 import javax.servlet.*;
-import java.io.IOException;
-import java.net.ServerSocket;
+import javax.servlet.http.HttpSession;
+import java.time.LocalTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -66,9 +67,22 @@ public class ServerConfig {
         return handlers;
     }
 
-    public HttpRequestHandler createHandler(ServletContext servletContext, Set<ServletRequestListener> listeners, String url){
+    public HttpRequestHandler createHandler(JerryServletContext servletContext, Set<ServletRequestListener> listeners, String url){
         return (HttpRequest request, HttpResponse response, HttpContext context)->{
             Thread.currentThread().setContextClassLoader(servletContext.getClassLoader());
+
+            String sessionId = null;
+            for(HeaderElement element : request.getFirstHeader("Cookie").getElements()){
+                if(element.getName().equals("JSESSIONID")){
+                    sessionId = element.getValue();
+                }
+            }
+
+            if(sessionId == null){
+                servletContext.createSession(response).setLastAccesedTime(LocalTime.now().toNanoOfDay());
+            } else{
+                servletContext.getSession(sessionId).setLastAccesedTime(LocalTime.now().toNanoOfDay());
+            }
 
             JerryServletRequest servletRequest = new JerryServletRequest(request, servletContext);
             JerryServletResponse servletResponse = new JerryServletResponse(response, servletContext);

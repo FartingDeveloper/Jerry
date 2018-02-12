@@ -1,8 +1,11 @@
 package servlet.context;
 
 
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
 import org.apache.logging.log4j.LogManager;
 import servlet.JerryEnumeration;
+import servlet.JerryHttpSession;
 import servlet.registration.JerryFilterRegistration;
 import servlet.registration.JerryFilterRegistrationDynamic;
 import servlet.registration.JerryServletRegistration;
@@ -11,10 +14,7 @@ import servlet.registration.JerryServletRegistrationDynamic;
 import javax.activation.MimeType;
 import javax.servlet.*;
 import javax.servlet.descriptor.JspConfigDescriptor;
-import javax.servlet.http.HttpSessionActivationListener;
-import javax.servlet.http.HttpSessionAttributeListener;
-import javax.servlet.http.HttpSessionBindingListener;
-import javax.servlet.http.HttpSessionListener;
+import javax.servlet.http.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -52,54 +52,32 @@ public class JerryServletContext implements ServletContext {
     private String requestEncoding;
     private String responseEncoding;
 
+    private ClassLoader classLoader;
+
     private Map<String, ? extends ServletContext> contexts;
 
-    private ClassLoader classLoader;
+    private Map<String, JerryHttpSession> sessions;
 
     private Map<String, Object> attributes = new HashMap<>();
 
     private org.apache.logging.log4j.Logger logger = LogManager.getLogger("servlet.context.JerryServletContext");
 
-    public JerryServletContext(Set<String> resourcePaths, Map<String, MimeType> mimeTypes, Map<String, ServletContext> contexts, ClassLoader classLoader){
+    public JerryServletContext(Map<String, JerryServletContext> contexts, ClassLoader classLoader){
+        this.contexts = contexts;
+        this.classLoader = classLoader;
+
         this.contextPath = "";
         this.contextParameters = new HashMap<>();
         this.servletRegistrations = new HashMap<>();
         this.filterRegistrations = new HashMap<>();
+        this.resourcePaths = new HashSet<>();
+        this.mimeTypes = new HashMap<>();
+        this.sessions = new HashMap<>();
         this.sessionTimeout = 43200;
-        this.resourcePaths = resourcePaths;
-        this.mimeTypes = mimeTypes;
-        this.contexts = contexts;
-        this.classLoader = classLoader;
     }
 
-    public JerryServletContext(Map<String, String> contextParameters,
-                               Map<String, JerryServletRegistration> servletRegistrations,
-                               Map<String, JerryFilterRegistration> filterRegistrations, Set<EventListener> listeners,
-                               Set<String> resourcePaths, Map<String, MimeType> mimeTypes, Map<String, ? extends ServletContext> contexts, ClassLoader classLoader){
-        this.contextPath = "";
-        this.contextParameters = contextParameters;
-        this.servletRegistrations = servletRegistrations;
-        this.filterRegistrations = filterRegistrations;
-        this.resourcePaths = resourcePaths;
-        this.mimeTypes = mimeTypes;
-        this.contexts = contexts;
-        this.classLoader = classLoader;
-        sortListeners(listeners);
-    }
-
-    public JerryServletContext(String contextPath, Map<String, String> contextParameters,
-                               Map<String, JerryServletRegistration> servletRegistrations,
-                               Map<String, JerryFilterRegistration> filterRegistrations, Set<EventListener> listeners,
-                               Set<String> resourcePaths, Map<String, MimeType> mimeTypes, Map<String, ? extends ServletContext> contexts, ClassLoader classLoader){
+    public void setContextPath(String contextPath) {
         this.contextPath = contextPath;
-        this.contextParameters = contextParameters;
-        this.servletRegistrations = servletRegistrations;
-        this.filterRegistrations = filterRegistrations;
-        this.resourcePaths = resourcePaths;
-        this.mimeTypes = mimeTypes;
-        this.contexts = contexts;
-        this.classLoader = classLoader;
-        sortListeners(listeners);
     }
 
     public String getContextPath() {
@@ -463,6 +441,14 @@ public class JerryServletContext implements ServletContext {
         return listener;
     }
 
+    public void addServletRegistration(JerryServletRegistration registration){
+        servletRegistrations.put(registration.getName(), registration);
+    }
+
+    public void addFilterRegistration(JerryFilterRegistration registration){
+        filterRegistrations.put(registration.getName(), registration);
+    }
+
     public Set<ServletRequestAttributeListener> getRequestAttributeListeners() {
         return requestAttributeListeners;
     }
@@ -556,6 +542,14 @@ public class JerryServletContext implements ServletContext {
             contextListener.contextInitialized(new ServletContextEvent(this));
         }
 
+        for(JerryServletRegistration servletRegistration : servletRegistrations.values()){
+            servletRegistration.setInitialized(true);
+        }
+
+        for(JerryFilterRegistration filterRegistration : filterRegistrations.values()){
+            filterRegistration.setInitialized(true);
+        }
+
         initialized = true;
     }
 
@@ -603,5 +597,31 @@ public class JerryServletContext implements ServletContext {
                 return true;
             }
             return false;
+    }
+
+    public JerryHttpSession createSession(HttpResponse response){
+        JerryHttpSession session = new JerryHttpSession(this);
+        session.setMaxInactiveInterval(sessionTimeout);
+        sessions.put(session.getId(), session);
+
+        response.setHeader("Set-Cookie", "JSESSIONID=" + session.getId());
+
+        for (HttpSessionListener listener : sessionListeners){
+            listener.sessionCreated(new HttpSessionEvent(session));
+        }
+
+        return session;
+    }
+
+    public void destroySession(String sessionId){
+        for (HttpSessionListener listener : sessionListeners){
+            listener.sessionDestroyed(new HttpSessionEvent(sessions.get(sessionId)));
+        }
+
+        sessions.remove(sessionId);
+    }
+
+    public JerryHttpSession getSession(String sessionId){
+        return sessions.get(sessionId);
     }
 }

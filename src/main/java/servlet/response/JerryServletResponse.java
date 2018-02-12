@@ -1,5 +1,6 @@
-package servlet;
+package servlet.response;
 
+import org.apache.http.HeaderElement;
 import org.apache.http.HttpResponse;
 
 import javax.servlet.ServletContext;
@@ -22,7 +23,7 @@ public class JerryServletResponse implements ServletResponse {
 
     @Override
     public String getCharacterEncoding() {
-        return response.getFirstHeader("Accept-Encoding").getName();
+        return response.getFirstHeader("Accept-Charset").getValue();
     }
 
     @Override
@@ -42,7 +43,7 @@ public class JerryServletResponse implements ServletResponse {
 
     @Override
     public void setCharacterEncoding(String charset) {
-        response.setHeader("Accept-Encoding", charset);
+        response.setHeader("Accept-Charset", charset);
     }
 
     @Override
@@ -92,11 +93,13 @@ public class JerryServletResponse implements ServletResponse {
 
     @Override
     public void setLocale(Locale loc) {
-
+        response.setHeader("Accept-Language", loc.toString());
     }
 
     @Override
     public Locale getLocale() {
-        return null;
+        HeaderElement element = response.getFirstHeader("Accept-Language").getElements()[0];
+        int index = element.getName().indexOf("_");
+        return new Locale(element.getName().substring(0, index), element.getName().substring(index, element.getName().length()));
     }
 }
