@@ -268,4 +268,9 @@ public class ServletRequestTest {
             Assert.fail();
         }
     }
+
+    @Test
+    public void getPath(){
+        System.out.println(servletRequest.getPath());
+    }
 }

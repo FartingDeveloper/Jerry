@@ -20,7 +20,7 @@ public class JerryServletRequest implements ServletRequest {
 
     private static final String COLON = ":";
 
-    private HttpRequest request;
+    protected HttpRequest request;
     private ServletContext servletContext;
     private Map<String, Object> attributes;
     private Set<ServletRequestAttributeListener> listeners;
@@ -273,6 +273,15 @@ public class JerryServletRequest implements ServletRequest {
     @Override
     public String getRealPath(String path) {
         return request.getFirstHeader("Referer").getName();
+    }
+
+    public String getPath(){
+        String uri = request.getRequestLine().getUri();
+        int index = uri.indexOf("://");
+        uri = uri.substring(index + 3, uri.length());
+        index = uri.indexOf("/");
+        int lastIndex = uri.indexOf("?");
+        return uri.substring(index, lastIndex);
     }
 
     @Override

@@ -93,7 +93,7 @@ public class JerryServletResponse implements ServletResponse {
 
     @Override
     public void setLocale(Locale loc) {
-        response.setHeader("Accept-Language", loc.toString());
+        response.setLocale(loc);
     }
 
     @Override
