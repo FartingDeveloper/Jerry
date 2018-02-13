@@ -84,8 +84,8 @@ public class ServerConfig {
                 servletContext.getSession(sessionId).setLastAccesedTime(LocalTime.now().toNanoOfDay());
             }
 
-            JerryServletRequest servletRequest = new JerryServletRequest(request, servletContext);
             JerryServletResponse servletResponse = new JerryServletResponse(response, servletContext);
+            JerryServletRequest servletRequest = new JerryServletRequest(request, servletResponse, servletContext);
 
             for (ServletRequestListener listener : listeners){
                 listener.requestInitialized(new ServletRequestEvent(servletContext, servletRequest));

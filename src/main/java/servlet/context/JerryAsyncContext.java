@@ -1,5 +1,6 @@
 package servlet.context;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import servlet.request.JerryServletRequest;
 import servlet.response.JerryServletResponse;
 
@@ -7,29 +8,39 @@ import javax.servlet.*;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 public class JerryAsyncContext implements AsyncContext {
+
+    @Autowired
+    private ScheduledExecutorService threadPool;
 
     private JerryServletRequest servletRequest;
     private JerryServletResponse servletResponse;
 
+    private String path;
+
     private boolean originalRequestAndResponse;
 
     private boolean completed;
+    private boolean dispatched;
+    private boolean initialized;
 
     private long timeout;
 
     private Map<AsyncListener, RequestResponsePair> listeners = new LinkedHashMap<>();
 
-    public JerryAsyncContext(JerryServletRequest request, JerryServletResponse response){
-        servletRequest = request;
-        servletResponse = response;
+    public JerryAsyncContext(){
+        timeout = 30000;
     }
 
-    public JerryAsyncContext(JerryServletRequest request, JerryServletResponse response, boolean originalRequestAndResponse){
-        servletRequest = request;
-        servletResponse = response;
-        this.originalRequestAndResponse = originalRequestAndResponse;
+    public void init(JerryServletRequest request, JerryServletResponse response, String path){
+        this.servletRequest = request;
+        this.servletResponse = response;
+        this.path = path;
+        initialized = true;
     }
 
     @Override
@@ -53,30 +64,24 @@ public class JerryAsyncContext implements AsyncContext {
 
     @Override
     public void dispatch() {
-        try {
-            servletRequest.getRequestDispatcher(servletRequest.getPath()).forward(servletRequest, servletResponse);
-        } catch (ServletException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        dispatch(path);
     }
 
     @Override
     public void dispatch(String path) {
-        try {
-            servletRequest.getRequestDispatcher(path).forward(servletRequest, servletResponse);
-        } catch (ServletException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        dispatch(servletRequest.getServletContext(), path);
     }
 
     @Override
     public void dispatch(ServletContext context, String path) {
         try {
+            if(completed || (!dispatched && initialized)){
+                throw new IllegalStateException();
+            }
+
+            dispatched = true;
             context.getRequestDispatcher(path).forward(servletRequest, servletResponse);
+            dispatched = false;
         } catch (ServletException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -86,29 +91,49 @@ public class JerryAsyncContext implements AsyncContext {
 
     @Override
     public void complete() {
-        for (AsyncListener listener : listeners.keySet()){
-            RequestResponsePair pair = listeners.get(listener);
-            try {
-                listener.onComplete(new AsyncEvent(this, pair.servletRequest, pair.servletResponse));
-            } catch (IOException e) {
-                e.printStackTrace();
+        if(! dispatched && ! completed){
+            for (AsyncListener listener : listeners.keySet()){
+                RequestResponsePair pair = listeners.get(listener);
+                try {
+                    listener.onComplete(new AsyncEvent(this, pair.servletRequest, pair.servletResponse));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
+
+        servletResponse.commit();
+
         completed = true;
     }
 
     @Override
     public void start(Runnable run) {
-        new Thread(run).start();
+        ScheduledFuture future = threadPool.schedule(run, timeout, TimeUnit.MILLISECONDS);
+        threadPool.submit(()->{
+            if(future.isCancelled()){
+                try{
+                    for (AsyncListener listener : listeners.keySet()){
+                        RequestResponsePair pair = listeners.get(listener);
+                        listener.onTimeout(new AsyncEvent(this, pair.servletRequest, pair.servletResponse));
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     @Override
     public void addListener(AsyncListener listener) {
-        listeners.put(listener, new RequestResponsePair(servletRequest, servletResponse));
+        addListener(listener, servletRequest, servletResponse);
     }
 
     @Override
     public void addListener(AsyncListener listener, ServletRequest servletRequest, ServletResponse servletResponse) {
+        if(dispatched){
+            throw new IllegalStateException();
+        }
         listeners.put(listener, new RequestResponsePair(servletRequest, servletResponse));
     }
 
@@ -127,6 +152,9 @@ public class JerryAsyncContext implements AsyncContext {
 
     @Override
     public void setTimeout(long timeout) {
+        if(dispatched){
+            throw new IllegalStateException();
+        }
         this.timeout = timeout;
     }
 

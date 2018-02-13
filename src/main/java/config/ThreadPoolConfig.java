@@ -8,34 +8,15 @@ import org.springframework.context.annotation.PropertySource;
 import java.util.concurrent.*;
 
 @Configuration
-@PropertySource("classpath:/com/rg/pool.properties")
+@PropertySource("classpath:/com/rg/server.properties")
 public class ThreadPoolConfig {
-
-    @Value("${queue.capacity}")
-    private int capacity;
 
     @Value("${threadPool.corePoolSize}")
     private int corePoolSize;
 
-    @Value("${threadPool.maximumPoolSize}")
-    private int maximumPoolSize;
-
-    @Value("${queue.keepAliveTime}")
-    private long keepAliveTime;
-
     @Bean
-    public TimeUnit unit(){
-        return TimeUnit.MINUTES;
-    }
-
-    @Bean
-    public BlockingQueue<Runnable> queue(){
-        return new ArrayBlockingQueue<Runnable>(capacity);
-    }
-
-    @Bean
-    public ExecutorService threadPool(TimeUnit unit, BlockingQueue<Runnable> queue){
-        return new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTime, unit, queue);
+    public ScheduledExecutorService threadPool(){
+        return Executors.newScheduledThreadPool(corePoolSize);
     }
 
 }

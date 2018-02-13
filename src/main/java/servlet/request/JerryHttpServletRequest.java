@@ -2,6 +2,7 @@ package servlet.request;
 
 import org.apache.http.HttpRequest;
 import servlet.context.JerryServletContext;
+import servlet.response.JerryServletResponse;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.*;
@@ -12,8 +13,8 @@ import java.util.Enumeration;
 
 public class JerryHttpServletRequest extends JerryServletRequest implements HttpServletRequest {
 
-    public JerryHttpServletRequest(HttpRequest request, JerryServletContext servletContext) {
-        super(request, servletContext);
+    public JerryHttpServletRequest(HttpRequest request, JerryServletResponse response , JerryServletContext servletContext) {
+        super(request, response, servletContext);
     }
 
     @Override

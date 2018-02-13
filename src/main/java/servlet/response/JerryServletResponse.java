@@ -16,6 +16,8 @@ public class JerryServletResponse implements ServletResponse {
     private ServletContext servletContext;
     private String contentType;
 
+    private boolean commited;
+
     public JerryServletResponse(HttpResponse response, ServletContext servletContext){
         this.response = response;
         this.servletContext = servletContext;
@@ -84,6 +86,10 @@ public class JerryServletResponse implements ServletResponse {
     @Override
     public boolean isCommitted() {
         return false;
+    }
+
+    public void commit(){
+        commited = true;
     }
 
     @Override

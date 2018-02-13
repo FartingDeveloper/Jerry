@@ -5,7 +5,9 @@ import org.apache.http.HttpRequest;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import servlet.JerryEnumeration;
+import servlet.context.JerryAsyncContext;
 import servlet.context.JerryServletContext;
+import servlet.response.JerryServletResponse;
 
 import javax.servlet.*;
 import java.io.BufferedReader;
@@ -18,15 +20,20 @@ import java.util.*;
 
 public class JerryServletRequest implements ServletRequest {
 
-    private static final String COLON = ":";
-
     protected HttpRequest request;
-    private ServletContext servletContext;
+    protected JerryServletResponse servletResponse;
+
+    private JerryServletContext servletContext;
     private Map<String, Object> attributes;
     private Set<ServletRequestAttributeListener> listeners;
 
-    public JerryServletRequest(HttpRequest request, JerryServletContext servletContext){
+    private boolean asyncStarted;
+
+    private JerryAsyncContext asyncContext;
+
+    public JerryServletRequest(HttpRequest request, JerryServletResponse servletResponse, JerryServletContext servletContext){
         this.request = request;
+        this.servletResponse = servletResponse;
         this.servletContext = servletContext;
         attributes = new HashMap<>();
         listeners = servletContext.getRequestAttributeListeners();
@@ -182,7 +189,7 @@ public class JerryServletRequest implements ServletRequest {
     @Override
     public String getServerName() {
         String name = request.getFirstHeader("Host").getValue();
-        int index = name.lastIndexOf(COLON);
+        int index = name.lastIndexOf(":");
         if(index != -1){
             return name.substring(0, index);
         }
@@ -192,7 +199,7 @@ public class JerryServletRequest implements ServletRequest {
     @Override
     public int getServerPort() {
         String port = request.getFirstHeader("Host").getValue();
-        int index = port.lastIndexOf(COLON);
+        int index = port.lastIndexOf(":");
         if(index != -1){
             return Integer.valueOf(port.substring(index + 1, port.length()));
         }
@@ -289,7 +296,7 @@ public class JerryServletRequest implements ServletRequest {
         HeaderElement element  = request.getFirstHeader("Forwarded").getElements()[0];
         NameValuePair param = element.getParameterByName("by");
         if(param != null){
-            int index = param.getValue().indexOf(COLON);
+            int index = param.getValue().indexOf(":");
             if(index != -1){
                 return Integer.valueOf(param.getValue().substring(index + 1, param.getValue().length()));
             }
@@ -325,17 +332,24 @@ public class JerryServletRequest implements ServletRequest {
 
     @Override
     public AsyncContext startAsync() throws IllegalStateException {
-        return null;
+        startAsync(this, servletResponse);
+        asyncContext.setOriginalRequestAndResponse(true);
+        return asyncContext;
     }
 
     @Override
     public AsyncContext startAsync(ServletRequest servletRequest, ServletResponse servletResponse) throws IllegalStateException {
-        return null;
+        if(asyncContext == null){
+            asyncContext = new JerryAsyncContext();
+            asyncContext.init((JerryServletRequest) servletRequest, (JerryServletResponse) servletResponse, getPath());
+            asyncContext.setOriginalRequestAndResponse(false);
+        }
+        return asyncContext;
     }
 
     @Override
     public boolean isAsyncStarted() {
-        return false;
+        return asyncStarted;
     }
 
     @Override
@@ -345,7 +359,7 @@ public class JerryServletRequest implements ServletRequest {
 
     @Override
     public AsyncContext getAsyncContext() {
-        return null;
+        return asyncContext;
     }
 
     @Override

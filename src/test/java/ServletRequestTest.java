@@ -7,8 +7,10 @@ import org.junit.Before;
 import org.junit.Test;
 import static org.mockito.Mockito.*;
 
+import org.mockito.Mockito;
 import servlet.context.JerryServletContext;
 import servlet.request.JerryServletRequest;
+import servlet.response.JerryServletResponse;
 
 import javax.servlet.ServletContext;
 import java.io.UnsupportedEncodingException;
@@ -52,7 +54,7 @@ public class ServletRequestTest {
         httpGet.setHeader("Accept-Language", Locale.getDefault().toString() + "," + Locale.CANADA.toString());
         httpGet.setHeader("Forwarded", "for=127.0.0.1;proto=http;by=127.0.0.1:" + PORT);
 
-        servletRequest = new JerryServletRequest(httpGet, context);
+        servletRequest = new JerryServletRequest(httpGet, mock(JerryServletResponse.class), context);
     }
 
     @Test
@@ -103,7 +105,7 @@ public class ServletRequestTest {
         when(request.getFirstHeader(contentLenght)).thenReturn(mock(Header.class));
         when(request.getFirstHeader(contentLenght).getValue()).thenReturn(String.valueOf(lenght));
 
-        servletRequest = new JerryServletRequest(request, null);
+        servletRequest = new JerryServletRequest(request, mock(JerryServletResponse.class),null);
         if(servletRequest.getContentLength() != lenght){
             Assert.fail();
         }
@@ -119,7 +121,7 @@ public class ServletRequestTest {
         when(request.getFirstHeader(contentLenght)).thenReturn(mock(Header.class));
         when(request.getFirstHeader(contentLenght).getValue()).thenReturn(String.valueOf(lenght));
 
-        servletRequest = new JerryServletRequest(request, null);
+        servletRequest = new JerryServletRequest(request, mock(JerryServletResponse.class),null);
         if(servletRequest.getContentLength() != -1){
             Assert.fail();
         }
@@ -135,7 +137,7 @@ public class ServletRequestTest {
         when(request.getFirstHeader(contentLenght)).thenReturn(mock(Header.class));
         when(request.getFirstHeader(contentLenght).getValue()).thenReturn(String.valueOf(lenght));
 
-        servletRequest = new JerryServletRequest(request, null);
+        servletRequest = new JerryServletRequest(request, mock(JerryServletResponse.class),null);
         if(servletRequest.getContentLength() != lenght){
             Assert.fail();
         }
@@ -151,7 +153,7 @@ public class ServletRequestTest {
         when(request.getFirstHeader(content)).thenReturn(mock(Header.class));
         when(request.getFirstHeader(content).getValue()).thenReturn(contentTypeValue);
 
-        servletRequest = new JerryServletRequest(request, null);
+        servletRequest = new JerryServletRequest(request, mock(JerryServletResponse.class),null);
         if(servletRequest.getContentType() != contentTypeValue){
             Assert.fail();
         }
