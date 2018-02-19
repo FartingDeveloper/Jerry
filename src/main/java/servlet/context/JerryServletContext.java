@@ -613,6 +613,17 @@ public class JerryServletContext implements ServletContext {
         return session;
     }
 
+
+    public void changeSessionId(String sessionId){
+        JerryHttpSession session = sessions.get(sessionId);
+        if(session == null) {
+            throw new IllegalStateException();
+        }
+        session.setId(UUID.randomUUID().toString());
+        sessions.remove(sessionId);
+        sessions.put(session.getId(), session);
+    }
+
     public void destroySession(String sessionId){
         for (HttpSessionListener listener : sessionListeners){
             listener.sessionDestroyed(new HttpSessionEvent(sessions.get(sessionId)));

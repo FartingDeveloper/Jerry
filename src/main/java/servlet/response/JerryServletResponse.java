@@ -2,6 +2,7 @@ package servlet.response;
 
 import org.apache.http.HeaderElement;
 import org.apache.http.HttpResponse;
+import servlet.io.JerryServletOutputStream;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletOutputStream;
@@ -12,15 +13,21 @@ import java.util.Locale;
 
 public class JerryServletResponse implements ServletResponse {
 
-    private HttpResponse response;
-    private ServletContext servletContext;
-    private String contentType;
+    protected HttpResponse response;
+    protected ServletContext servletContext;
+
+    private JerryServletOutputStream outputStream;
+    private PrintWriter writer;
 
     private boolean commited;
+    private byte[] buffer;
+    private int bufferSize;
 
     public JerryServletResponse(HttpResponse response, ServletContext servletContext){
         this.response = response;
         this.servletContext = servletContext;
+        outputStream = new JerryServletOutputStream();
+        writer = new PrintWriter(outputStream);
     }
 
     @Override
@@ -30,17 +37,17 @@ public class JerryServletResponse implements ServletResponse {
 
     @Override
     public String getContentType() {
-        return contentType;
+        return response.getFirstHeader("Content-Type").getValue();
     }
 
     @Override
     public ServletOutputStream getOutputStream() throws IOException {
-        return null;
+        return outputStream;
     }
 
     @Override
     public PrintWriter getWriter() throws IOException {
-        return null;
+        return writer;
     }
 
     @Override
@@ -65,27 +72,27 @@ public class JerryServletResponse implements ServletResponse {
 
     @Override
     public void setBufferSize(int size) {
-
+        outputStream.setBufferSize(size);
     }
 
     @Override
     public int getBufferSize() {
-        return 0;
+        return outputStream.getBufferSize();
     }
 
     @Override
     public void flushBuffer() throws IOException {
-
+        outputStream.flush();
     }
 
     @Override
     public void resetBuffer() {
-
+        outputStream.resetBuffer();
     }
 
     @Override
     public boolean isCommitted() {
-        return false;
+        return commited;
     }
 
     public void commit(){
@@ -94,7 +101,9 @@ public class JerryServletResponse implements ServletResponse {
 
     @Override
     public void reset() {
-
+        if(commited){
+            throw new IllegalStateException();
+        }
     }
 
     @Override
@@ -107,5 +116,9 @@ public class JerryServletResponse implements ServletResponse {
         HeaderElement element = response.getFirstHeader("Accept-Language").getElements()[0];
         int index = element.getName().indexOf("_");
         return new Locale(element.getName().substring(0, index), element.getName().substring(index, element.getName().length()));
+    }
+
+    public HttpResponse getResponse() {
+        return response;
     }
 }

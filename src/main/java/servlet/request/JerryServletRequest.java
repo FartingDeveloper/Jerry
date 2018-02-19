@@ -23,7 +23,7 @@ public class JerryServletRequest implements ServletRequest {
     protected HttpRequest request;
     protected JerryServletResponse servletResponse;
 
-    private JerryServletContext servletContext;
+    protected JerryServletContext servletContext;
     private Map<String, Object> attributes;
     private Set<ServletRequestAttributeListener> listeners;
 

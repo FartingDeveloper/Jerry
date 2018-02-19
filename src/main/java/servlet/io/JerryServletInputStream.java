@@ -66,4 +66,5 @@ public class JerryServletInputStream extends ServletInputStream {
     public int read() throws IOException {
         return 0;
     }
+
 }

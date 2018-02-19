@@ -42,7 +42,7 @@ public class ServletRequestTest {
         JerryServletContext context = mock(JerryServletContext.class);
         
         URIBuilder builder = new URIBuilder();
-        builder.setScheme(SCHEME).setHost(HOST).setPath("/search").setCharset(Charset.forName(UTF_8));
+        builder.setScheme(SCHEME).setHost(HOST).setPath("/servlet/lala/lala").setCharset(Charset.forName(UTF_8));
         for (int i = 0; i < names.length; i++){
             builder.setParameter(names[i], values[i]);
         }

@@ -1,19 +1,30 @@
 package servlet.request;
 
+import org.apache.http.Header;
+import org.apache.http.HeaderElement;
 import org.apache.http.HttpRequest;
+import servlet.JerryEnumeration;
+import servlet.JerryHttpSession;
 import servlet.context.JerryServletContext;
-import servlet.response.JerryServletResponse;
+import servlet.response.JerryHttpServletResponse;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.*;
 import java.io.IOException;
 import java.security.Principal;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoField;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
+import java.util.WeakHashMap;
 
 public class JerryHttpServletRequest extends JerryServletRequest implements HttpServletRequest {
 
-    public JerryHttpServletRequest(HttpRequest request, JerryServletResponse response , JerryServletContext servletContext) {
+    private JerryHttpSession session;
+
+    public JerryHttpServletRequest(HttpRequest request, JerryHttpServletResponse response , JerryServletContext servletContext) {
         super(request, response, servletContext);
     }
 
@@ -24,47 +35,84 @@ public class JerryHttpServletRequest extends JerryServletRequest implements Http
 
     @Override
     public Cookie[] getCookies() {
-        return new Cookie[0];
+        Header header = request.getFirstHeader("Cookie");
+        if(header == null){
+            return null;
+        }
+
+        HeaderElement[] elements = header.getElements();
+        Cookie[] cookies = new Cookie[elements.length];
+
+        int i = 0;
+        for(HeaderElement element : elements){
+            cookies[i++] = new Cookie(element.getName(), element.getValue());
+        }
+        return cookies;
     }
 
     @Override
     public long getDateHeader(String name) {
-        return 0;
+        Header header = request.getFirstHeader("Date");
+        String value = header.getValue();
+        return LocalDateTime.parse(value, DateTimeFormatter.RFC_1123_DATE_TIME).getLong(ChronoField.ERA);
     }
 
     @Override
     public String getHeader(String name) {
-        return null;
+        return request.getFirstHeader(name).getValue();
     }
 
     @Override
     public Enumeration<String> getHeaders(String name) {
-        return null;
+        ArrayList<String> list = new ArrayList<>();
+
+        for(Header element : request.getHeaders(name)){
+            list.add(element.getValue());
+        }
+
+        return new JerryEnumeration<>(list.iterator());
     }
 
     @Override
     public Enumeration<String> getHeaderNames() {
-        return null;
+        ArrayList<String> list = new ArrayList<>();
+
+        for(Header element : request.getAllHeaders()){
+            list.add(element.getName());
+        }
+
+        return new JerryEnumeration<>(list.iterator());
     }
 
     @Override
     public int getIntHeader(String name) {
-        return 0;
+        Header header = request.getFirstHeader(name);
+        if(header == null){
+            return 0;
+        }
+        return Integer.valueOf(header.getValue());
     }
 
     @Override
     public String getMethod() {
-        return null;
+        return request.getRequestLine().getMethod();
     }
 
     @Override
     public String getPathInfo() {
-        return null;
+        String path = getPath();
+        int index = path.indexOf("/");
+        path = path.substring(index + 1, path.length());
+        index = path.indexOf("/");
+        if(index == -1){
+            return null;
+        }
+        return path.substring(index, path.length());
     }
 
     @Override
     public String getPathTranslated() {
-        return null;
+        return servletContext.getRealPath(getPathInfo());
     }
 
     @Override
@@ -74,7 +122,12 @@ public class JerryHttpServletRequest extends JerryServletRequest implements Http
 
     @Override
     public String getQueryString() {
-        return null;
+        String uri = request.getRequestLine().getUri();
+        int index = uri.indexOf("?");
+        if(index == -1){
+            return null;
+        }
+        return uri.substring(index + 1, uri.length());
     }
 
     @Override
@@ -99,47 +152,74 @@ public class JerryHttpServletRequest extends JerryServletRequest implements Http
 
     @Override
     public String getRequestURI() {
-        return null;
+        return getPath();
     }
 
     @Override
     public StringBuffer getRequestURL() {
-        return null;
+        String uri = request.getRequestLine().getUri();
+        return new StringBuffer(uri.substring(0, uri.indexOf("?")));
     }
 
     @Override
     public String getServletPath() {
-        return null;
+        String uri = getPath();
+        while (uri.indexOf("/") != uri.lastIndexOf("/")){
+            uri = uri.substring(0, uri.lastIndexOf("/"));
+        }
+        return uri;
     }
 
     @Override
     public HttpSession getSession(boolean create) {
-        return null;
+        if(create && session == null){
+            session = servletContext.createSession(servletResponse.getResponse());
+        }
+        return session;
+    }
+
+    public void setSession(JerryHttpSession session) {
+        this.session = session;
     }
 
     @Override
     public HttpSession getSession() {
-        return null;
+        if(session == null){
+            session = servletContext.createSession(servletResponse.getResponse());
+        }
+        return session;
     }
 
     @Override
     public String changeSessionId() {
-        return null;
+        servletContext.changeSessionId(session.getId());
+
+        servletResponse.getResponse().setHeader("Set-Cookie", "JSESSIONID=" + session.getId());
+
+        return session.getId();
     }
 
     @Override
     public boolean isRequestedSessionIdValid() {
-        return false;
+        if(session == null){
+            return false;
+        }
+        return true;
     }
 
     @Override
     public boolean isRequestedSessionIdFromCookie() {
+        for(HeaderElement element : request.getFirstHeader("Cookie").getElements()){
+            if(element.getName().equals("JSESSIONID")){
+                return true;
+            }
+        }
         return false;
     }
 
     @Override
     public boolean isRequestedSessionIdFromURL() {
-        return false;
+        return request.getRequestLine().getUri().contains("JSESSIONID");
     }
 
     @Override

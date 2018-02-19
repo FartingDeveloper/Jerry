@@ -16,6 +16,7 @@ public class JerryHttpSession implements HttpSession {
     private long lastAccesedTime;
     private int invalidateTime;
     private boolean invalidate;
+    private boolean status;
 
     private Map<String, Object> attributes = new Hashtable<>();
 
@@ -28,6 +29,7 @@ public class JerryHttpSession implements HttpSession {
         sessionBindingListeners = context.getSessionBindingListeners();
         creationTime = LocalTime.now().toNanoOfDay();
         id = UUID.randomUUID().toString();
+        status = true;
     }
 
     @Override
@@ -140,10 +142,14 @@ public class JerryHttpSession implements HttpSession {
         if(invalidate){
             throw new IllegalStateException();
         }
-        return false;
+        return status;
     }
 
     public void setLastAccesedTime(long lastAccesedTime) {
         this.lastAccesedTime = lastAccesedTime;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 }
