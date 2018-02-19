@@ -1,4 +1,4 @@
-import config.ApplicationConfig;
+import config.ServerConfig;
 import container.Container;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
@@ -7,15 +7,8 @@ import java.io.IOException;
 public class Main {
     public static void main(String[] args) {
         AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext();
-        applicationContext.register(ApplicationConfig.class);
+        applicationContext.register(ServerConfig.class);
 
         Container container = new Container();
-        try {
-            container.run();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 }
