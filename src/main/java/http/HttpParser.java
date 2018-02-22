@@ -1,6 +1,14 @@
 package http;
 
+import java.io.*;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
+
 public class HttpParser {
+
+    private static final String CHARSET = "ASCII";
+    private static final String CRLF = "\r\n";
 
     private static final String[][] HttpReplies = {{"100", "Continue"},
             {"101", "Switching Protocols"},
@@ -43,5 +51,49 @@ public class HttpParser {
             {"503", "Service Unavailable"},
             {"504", "Gateway Timeout"},
             {"505", "HTTP Version Not Supported"}};
+
+    public static HttpRequest parse(Socket socket) throws IOException, WrongRequestException {
+        InputStream inputStream = socket.getInputStream();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, CHARSET));
+
+        RequestLine requestLine = new RequestLine(reader.readLine());
+
+        List<Header> headers = new ArrayList<>();
+
+        String header;
+        while ((header = reader.readLine()) != CRLF || header != null){
+            header = header.trim();
+
+            int index = header.indexOf(":");
+            if(index == -1){
+                throw new WrongRequestException();
+            }
+
+            String name = header.substring(0, index);
+            String value = header.substring(index + 1, header.length());
+
+            headers.add(new Header(name, value));
+        }
+
+        if(header == null){
+            return new HttpRequest(requestLine, headers);
+        }else{
+            if((reader.readLine()) != CRLF){
+                throw new WrongRequestException();
+            }
+        }
+
+        StringBuilder content = new StringBuilder();
+        String tmp;
+        while ((tmp = reader.readLine()) != null){
+            content.append(tmp);
+        }
+
+        return new HttpRequest(requestLine, headers, content.toString());
+    }
+
+    public static class WrongRequestException extends Exception{
+
+    }
 
 }

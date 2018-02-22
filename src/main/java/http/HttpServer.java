@@ -1,6 +1,5 @@
 package http;
 
-import org.apache.http.HeaderElement;
 import org.springframework.beans.factory.annotation.Autowired;
 import servlet.JerryHttpSession;
 import servlet.context.JerryServletContext;
@@ -40,10 +39,16 @@ public class HttpServer extends Thread{
             try {
                 Socket socket = serverSocket.accept();
                 threadPool.execute(()->{
-                    HttpRequest request = null;
-                    HttpResponse response = null;
+                    try{
+                        HttpRequest request = HttpParser.parse(socket);;
+                        HttpResponse response = null;
 
-                    urls.get("url").handle(request, response);
+                        urls.get("url").handle(request, response);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (HttpParser.WrongRequestException e) {
+                        e.printStackTrace();
+                    }
                 });
             } catch (IOException e) {
                 e.printStackTrace(); //LOG4G
@@ -83,45 +88,45 @@ public class HttpServer extends Thread{
 
     private RequestHandler createHandler(JerryServletContext servletContext, Set<ServletRequestListener> listeners, String url){
         return (HttpRequest request, HttpResponse response)->{
-            Thread.currentThread().setContextClassLoader(servletContext.getClassLoader());
-
-            String sessionId = null;
-            for(HeaderElement element : request.getFirstHeader("Cookie").getElements()){
-                if(element.getName().equals("JSESSIONID")){
-                    sessionId = element.getValue();
-                }
-            }
-
-            JerryHttpSession session = null;
-            if(sessionId == null){
-                session = servletContext.createSession(response);
-            } else{
-                session = servletContext.getSession(sessionId);
-            }
-
-            session.setLastAccesedTime(LocalTime.now().toNanoOfDay());
-
-            JerryHttpServletResponse servletResponse = new JerryHttpServletResponse(response, servletContext);
-            JerryHttpServletRequest servletRequest = new JerryHttpServletRequest(request, servletResponse, servletContext);
-
-            servletRequest.setSession(session);
-
-            for (ServletRequestListener listener : listeners){
-                listener.requestInitialized(new ServletRequestEvent(servletContext, servletRequest));
-            }
-
-            try {
-                servletContext.getRequestDispatcher(url).forward(servletRequest, servletResponse);
-                servletResponse.flushBuffer();
-            } catch (ServletException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            for (ServletRequestListener listener : listeners){
-                listener.requestDestroyed(new ServletRequestEvent(servletContext, servletRequest));
-            }
+//            Thread.currentThread().setContextClassLoader(servletContext.getClassLoader());
+//
+//            String sessionId = null;
+//            for(HeaderElement element : request.getHeader("Cookie").getElements()){
+//                if(element.getName().equals("JSESSIONID")){
+//                    sessionId = element.getValue();
+//                }
+//            }
+//
+//            JerryHttpSession session = null;
+//            if(sessionId == null){
+//                session = servletContext.createSession(response);
+//            } else{
+//                session = servletContext.getSession(sessionId);
+//            }
+//
+//            session.setLastAccesedTime(LocalTime.now().toNanoOfDay());
+//
+//            JerryHttpServletResponse servletResponse = new JerryHttpServletResponse(response, servletContext);
+//            JerryHttpServletRequest servletRequest = new JerryHttpServletRequest(request, servletResponse, servletContext);
+//
+//            servletRequest.setSession(session);
+//
+//            for (ServletRequestListener listener : listeners){
+//                listener.requestInitialized(new ServletRequestEvent(servletContext, servletRequest));
+//            }
+//
+//            try {
+//                servletContext.getRequestDispatcher(url).forward(servletRequest, servletResponse);
+//                servletResponse.flushBuffer();
+//            } catch (ServletException e) {
+//                e.printStackTrace();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//
+//            for (ServletRequestListener listener : listeners){
+//                listener.requestDestroyed(new ServletRequestEvent(servletContext, servletRequest));
+//            }
         };
     }
 }

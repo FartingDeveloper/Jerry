@@ -26,7 +26,7 @@ public class JerryServletResponse implements ServletResponse {
     public JerryServletResponse(HttpResponse response, ServletContext servletContext){
         this.response = response;
         this.servletContext = servletContext;
-        outputStream = new JerryServletOutputStream();
+        outputStream = new JerryServletOutputStream(null);
         writer = new PrintWriter(outputStream);
     }
 

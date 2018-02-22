@@ -1,26 +1,21 @@
+package servlet;
 
-import org.apache.http.HttpResponse;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import servlet.JerryHttpSession;
 import servlet.context.JerryServletContext;
 import servlet.request.JerryHttpServletRequest;
 import servlet.response.JerryHttpServletResponse;
 
 import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpSession;
-import javax.servlet.http.HttpSessionBindingListener;
 import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoField;
 import java.util.Enumeration;
-import java.util.HashSet;
 import java.util.Locale;
 
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class HttpServletRequestTest extends ServletRequestTest {
 

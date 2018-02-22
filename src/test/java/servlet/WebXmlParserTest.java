@@ -1,3 +1,5 @@
+package servlet;
+
 import loader.ContextLoader;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -78,7 +80,7 @@ public class WebXmlParserTest {
                 System.out.print(str + "; ");
             }
             System.out.println();
-            System.out.println("Init params: ");
+            System.out.println("Init PARAMS: ");
             Map<String, String> init = servletRegistration.getInitParameters();
             for (String key : init.keySet()){
                 System.out.println(key + " - " + init.get(key));
@@ -105,7 +107,7 @@ public class WebXmlParserTest {
                 System.out.print(str + "; ");
             }
             System.out.println();
-            System.out.println("Init params: ");
+            System.out.println("Init PARAMS: ");
             Map<String, String> init = filterRegistration.getInitParameters();
             for (String key : init.keySet()){
                 System.out.println(key + " - " + init.get(key));
