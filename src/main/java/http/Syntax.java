@@ -5,6 +5,12 @@ import java.util.regex.Pattern;
 
 public class Syntax {
 
+    public static final String PARAMS_START = "?";
+    public static final String PARAMS_SEPARATOR = "&";
+    public static final String ELEMENT_PARAMS_SEPARATOR = ";";
+    public static final String ELEMENT_SEPARATOR = ",";
+    public static final String EQUALITY = "=";
+
     public static int getIndex(String parameter, String character){
         Pattern pattern = Pattern.compile("[^ \\( \\[ \\{]+" + character + "[^ \\) \\] \\}]+");
         Matcher matcher = pattern.matcher(parameter);

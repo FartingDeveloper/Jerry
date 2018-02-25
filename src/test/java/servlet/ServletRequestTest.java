@@ -1,8 +1,9 @@
 package servlet;
 
-import org.apache.http.Header;
-import org.apache.http.HttpRequest;
-import org.apache.http.client.methods.HttpGet;
+import http.Header;
+import http.HttpRequest;
+import http.HttpRequestTest;
+import http.RequestLine;
 import org.apache.http.client.utils.URIBuilder;
 import org.junit.Assert;
 import org.junit.Before;
@@ -14,16 +15,17 @@ import servlet.context.JerryServletContext;
 import servlet.request.JerryServletRequest;
 import servlet.response.JerryServletResponse;
 
-import javax.servlet.ServletContext;
 import java.io.UnsupportedEncodingException;
+import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Locale;
 import java.util.Map;
 
-public class ServletRequestTest {
+public class ServletRequestTest{
 
     public static final String UTF_8 = "UTF-8";
     public static final String UTF_16 = "UTF-16";
@@ -34,9 +36,12 @@ public class ServletRequestTest {
     public static final String SCHEME = "http";
     public static final String HOST = "www.pornhub.com";
 
+    public static final String METHOD = "GET";
+    public static final String VERSION = "HTTP/1.1";
+
     public static final int PORT = 80;
-    
-    HttpGet httpGet;
+
+    HttpRequest request;
     JerryServletRequest servletRequest;
 
     @Before
@@ -50,13 +55,14 @@ public class ServletRequestTest {
         }
         URI uri = builder.build();
 
-        httpGet = new HttpGet(uri);
-        httpGet.setHeader("Host", HOST + ":" + PORT);
-        httpGet.setHeader("Accept-Charset", UTF_8);
-        httpGet.setHeader("Accept-Language", Locale.getDefault().toString() + "," + Locale.CANADA.toString());
-        httpGet.setHeader("Forwarded", "for=127.0.0.1;proto=http;by=127.0.0.1:" + PORT);
+        RequestLine line = new RequestLine(METHOD + " " + uri + " " + VERSION);
+        request = new HttpRequest(line, new ArrayList<>());
+        request.setHeader("Host", HOST + ":" + PORT);
+        request.setHeader("Accept-Charset", UTF_8);
+        request.setHeader("Accept-Language", Locale.getDefault().toString() + "," + Locale.CANADA.toString());
+        request.setHeader("Forwarded", "for=127.0.0.1;proto=http;by=127.0.0.1:" + PORT);
 
-        servletRequest = new JerryServletRequest(httpGet, mock(JerryServletResponse.class), context);
+        servletRequest = new JerryServletRequest(request, mock(JerryServletResponse.class), context);
     }
 
     @Test
@@ -104,8 +110,8 @@ public class ServletRequestTest {
 
         HttpRequest request = mock(HttpRequest.class);
 
-        when(request.getFirstHeader(contentLenght)).thenReturn(mock(Header.class));
-        when(request.getFirstHeader(contentLenght).getValue()).thenReturn(String.valueOf(lenght));
+        when(request.getHeader(contentLenght)).thenReturn(mock(Header.class));
+        when(request.getHeader(contentLenght).getValue()).thenReturn(String.valueOf(lenght));
 
         servletRequest = new JerryServletRequest(request, mock(JerryServletResponse.class),null);
         if(servletRequest.getContentLength() != lenght){
@@ -120,8 +126,8 @@ public class ServletRequestTest {
 
         HttpRequest request = mock(HttpRequest.class);
 
-        when(request.getFirstHeader(contentLenght)).thenReturn(mock(Header.class));
-        when(request.getFirstHeader(contentLenght).getValue()).thenReturn(String.valueOf(lenght));
+        when(request.getHeader(contentLenght)).thenReturn(mock(Header.class));
+        when(request.getHeader(contentLenght).getValue()).thenReturn(String.valueOf(lenght));
 
         servletRequest = new JerryServletRequest(request, mock(JerryServletResponse.class),null);
         if(servletRequest.getContentLength() != -1){
@@ -136,8 +142,8 @@ public class ServletRequestTest {
 
         HttpRequest request = mock(HttpRequest.class);
 
-        when(request.getFirstHeader(contentLenght)).thenReturn(mock(Header.class));
-        when(request.getFirstHeader(contentLenght).getValue()).thenReturn(String.valueOf(lenght));
+        when(request.getHeader(contentLenght)).thenReturn(mock(Header.class));
+        when(request.getHeader(contentLenght).getValue()).thenReturn(String.valueOf(lenght));
 
         servletRequest = new JerryServletRequest(request, mock(JerryServletResponse.class),null);
         if(servletRequest.getContentLength() != lenght){
@@ -152,8 +158,8 @@ public class ServletRequestTest {
 
         HttpRequest request = mock(HttpRequest.class);
 
-        when(request.getFirstHeader(content)).thenReturn(mock(Header.class));
-        when(request.getFirstHeader(content).getValue()).thenReturn(contentTypeValue);
+        when(request.getHeader(content)).thenReturn(mock(Header.class));
+        when(request.getHeader(content).getValue()).thenReturn(contentTypeValue);
 
         servletRequest = new JerryServletRequest(request, mock(JerryServletResponse.class),null);
         if(servletRequest.getContentType() != contentTypeValue){
@@ -219,7 +225,7 @@ public class ServletRequestTest {
 
     @Test
     public void getProtocolTest(){
-        if(! servletRequest.getProtocol().equals(httpGet.getProtocolVersion().toString())){
+        if(! servletRequest.getProtocol().equals(VERSION)){
             Assert.fail();
         }
     }

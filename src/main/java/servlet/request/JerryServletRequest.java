@@ -1,26 +1,26 @@
 package servlet.request;
 
-import org.apache.http.HeaderElement;
-import org.apache.http.HttpRequest;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.utils.URLEncodedUtils;
+import http.HeaderElement;
+import http.HttpRequest;
 import servlet.JerryEnumeration;
 import servlet.context.JerryAsyncContext;
 import servlet.context.JerryServletContext;
+import servlet.io.JerryServletInputStream;
 import servlet.response.JerryServletResponse;
 
 import javax.servlet.*;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.charset.Charset;
 import java.util.*;
 
 public class JerryServletRequest implements ServletRequest {
 
     protected HttpRequest request;
+    private JerryServletInputStream servletInputStream;
+    private BufferedReader bufferedReader;
+
     protected JerryServletResponse servletResponse;
 
     protected JerryServletContext servletContext;
@@ -33,6 +33,14 @@ public class JerryServletRequest implements ServletRequest {
 
     public JerryServletRequest(HttpRequest request, JerryServletResponse servletResponse, JerryServletContext servletContext){
         this.request = request;
+        this.servletInputStream = new JerryServletInputStream(request);
+
+        try {
+            this.bufferedReader = new BufferedReader(new InputStreamReader(request.getContentInputStream(), getCharacterEncoding()));
+        } catch (UnsupportedEncodingException e) {
+            bufferedReader = new BufferedReader(new InputStreamReader(request.getContentInputStream()));
+        }
+
         this.servletResponse = servletResponse;
         this.servletContext = servletContext;
         attributes = new HashMap<>();
@@ -51,7 +59,7 @@ public class JerryServletRequest implements ServletRequest {
 
     @Override
     public String getCharacterEncoding() {
-        return request.getFirstHeader("Accept-Charset").getValue();
+        return request.getHeader("Accept-Charset").getValue();
     }
 
     @Override
@@ -61,7 +69,7 @@ public class JerryServletRequest implements ServletRequest {
 
     @Override
     public int getContentLength() {
-        Integer length = Integer.valueOf(request.getFirstHeader("Content-Length").getValue());
+        Integer length = Integer.valueOf(request.getHeader("Content-Length").getValue());
         if(length == null || length < 0){
             return -1;
         }
@@ -70,7 +78,7 @@ public class JerryServletRequest implements ServletRequest {
 
     @Override
     public long getContentLengthLong() {
-        Long length = Long.valueOf(request.getFirstHeader("Content-Length").getValue());
+        Long length = Long.valueOf(request.getHeader("Content-Length").getValue());
         if(length == null|| length < 0){
             return -1;
         }
@@ -79,116 +87,49 @@ public class JerryServletRequest implements ServletRequest {
 
     @Override
     public String getContentType() {
-        return request.getFirstHeader("Content-Type").getValue();
+        return request.getHeader("Content-Type").getValue();
     }
 
     @Override
     public ServletInputStream getInputStream() throws IOException {
-        return null;
+        return servletInputStream;
     }
 
     @Override
     public String getParameter(String name) {
-        String parameter = null;
-        try {
-            List<NameValuePair> parameters = URLEncodedUtils.parse(new URI(
-                    request.getRequestLine().getUri()), Charset.forName(getCharacterEncoding()));
-            for (NameValuePair nameValuePair : parameters) {
-                if(nameValuePair.getName().equals(name)){
-                    parameter = nameValuePair.getValue();
-                    break;
-                }
-            }
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-        }
-        return parameter;
+        return request.getRequestParameterByName(name);
     }
 
     @Override
     public Enumeration<String> getParameterNames() {
-        JerryEnumeration<String> result = null;
-        try {
-            List<NameValuePair> parameters = URLEncodedUtils.parse(new URI(
-                    request.getRequestLine().getUri()), Charset.forName(getCharacterEncoding()));
-            if(parameters != null){
-                List<String> list = new ArrayList<>();
-                for (NameValuePair parameter : parameters){
-                    list.add(parameter.getName());
-                }
-                result = new JerryEnumeration<>(list.iterator());
-            }
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-        }
-        return result;
+        return new JerryEnumeration<>(request.getRequestParameters().keySet().iterator());
     }
 
     @Override
     public String[] getParameterValues(String name) {
-        String[] result = null;
-        try {
-            List<NameValuePair> parameters = URLEncodedUtils.parse(new URI(
-                    request.getRequestLine().getUri()), Charset.forName(getCharacterEncoding()));
-            if(parameters != null){
-                List<String> list = new ArrayList<>();
-                for (NameValuePair parameter : parameters){
-                    if(parameter.getName().equals(name)){
-                        list.add(parameter.getValue());
-                    }
-                }
-                result = list.toArray(new String[list.size()]);
-            }
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-        }
-        return result;
+        return request.getRequestParameters().get(name);
     }
 
     @Override
     public Map<String, String[]> getParameterMap() {
-        Map<String, String[]> result = new HashMap();
-        try {
-            List<NameValuePair> parameters = URLEncodedUtils.parse(new URI(
-                    request.getRequestLine().getUri()), Charset.forName(getCharacterEncoding()));
-            if(parameters != null){
-                for (NameValuePair parameter : parameters){
-                    if(result.containsKey(parameter.getName())){
-                        String[] values = result.get(parameter.getName());
-                        String[] newValues = new String[values.length + 1];
-                        for (int i = 0; i < values.length; i++){
-                            newValues[i] = values[i];
-                        }
-                        newValues[newValues.length] = parameter.getValue();
-                        result.put(parameter.getName(), newValues);
-                    }
-                }
-            }
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-        }
-        return result;
+        return request.getRequestParameters();
     }
 
     @Override
     public String getProtocol() {
-        return request.getProtocolVersion().toString();
+        return request.getRequestLine().getProtocolVersion();
     }
 
     @Override
     public String getScheme() {
-        for(HeaderElement element : request.getFirstHeader("Forwarded").getElements()){
-            NameValuePair param = element.getParameterByName("proto");
-            if(param != null){
-                return param.getValue();
-            }
-        }
-        return null;
+        String scheme = request.getRequestLine().getProtocolVersion();
+        int index = scheme.indexOf("/");
+        return scheme.substring(0, index);
     }
 
     @Override
     public String getServerName() {
-        String name = request.getFirstHeader("Host").getValue();
+        String name = request.getHeader("Host").getValue();
         int index = name.lastIndexOf(":");
         if(index != -1){
             return name.substring(0, index);
@@ -198,25 +139,25 @@ public class JerryServletRequest implements ServletRequest {
 
     @Override
     public int getServerPort() {
-        String port = request.getFirstHeader("Host").getValue();
+        String port = request.getHeader("Host").getValue();
         int index = port.lastIndexOf(":");
         if(index != -1){
             return Integer.valueOf(port.substring(index + 1, port.length()));
         }
-        return Integer.valueOf(port);
+        return -1;
     }
 
     @Override
     public BufferedReader getReader() throws IOException {
-        return null;
+        return bufferedReader;
     }
 
     @Override
     public String getRemoteAddr() {
-        for(HeaderElement element : request.getFirstHeader("Forwarded").getElements()){
-            NameValuePair param = element.getParameterByName("by");
-            if(param != null){
-                return param.getValue();
+        for(HeaderElement element : request.getHeader("Forwarded").getElements()){
+            String value = element.getParameterByName("by");
+            if(value != null){
+                return value;
             }
         }
         return null;
@@ -224,6 +165,12 @@ public class JerryServletRequest implements ServletRequest {
 
     @Override
     public String getRemoteHost() {
+        for(HeaderElement element : request.getHeader("Forwarded").getElements()){
+            String value = element.getParameterByName("host");
+            if(value != null){
+                return value;
+            }
+        }
         return getRemoteAddr();
     }
 
@@ -251,7 +198,7 @@ public class JerryServletRequest implements ServletRequest {
 
     @Override
     public Locale getLocale() {
-        HeaderElement element = request.getFirstHeader("Accept-Language").getElements()[0];
+        HeaderElement element = request.getHeader("Accept-Language").getElements().get(0);
         int index = element.getName().indexOf("_");
         return new Locale(element.getName().substring(0, index), element.getName().substring(index, element.getName().length()));
     }
@@ -259,7 +206,7 @@ public class JerryServletRequest implements ServletRequest {
     @Override
     public Enumeration<Locale> getLocales() {
         List<Locale> list = new ArrayList<>();
-        for(HeaderElement element : request.getFirstHeader("Accept-Language").getElements()){
+        for(HeaderElement element : request.getHeader("Accept-Language").getElements()){
             int index = element.getName().indexOf("_");
             list.add(new Locale(element.getName().substring(0, index), element.getName().substring(index + 1, element.getName().length())));
         }
@@ -279,7 +226,7 @@ public class JerryServletRequest implements ServletRequest {
 
     @Override
     public String getRealPath(String path) {
-        return request.getFirstHeader("Referer").getName();
+        return request.getHeader("Referer").getName();
     }
 
     public String getPath(){
@@ -293,15 +240,15 @@ public class JerryServletRequest implements ServletRequest {
 
     @Override
     public int getRemotePort() {
-        HeaderElement element  = request.getFirstHeader("Forwarded").getElements()[0];
-        NameValuePair param = element.getParameterByName("by");
-        if(param != null){
-            int index = param.getValue().indexOf(":");
+        HeaderElement element  = request.getHeader("Forwarded").getElements().get(0);
+        String value = element.getParameterByName("by");
+        if(value != null){
+            int index = value.indexOf(":");
             if(index != -1){
-                return Integer.valueOf(param.getValue().substring(index + 1, param.getValue().length()));
+                return Integer.valueOf(value.substring(index + 1, value.length()));
             }
         }
-        return 0;
+        return -1;
     }
 
     @Override
@@ -311,10 +258,10 @@ public class JerryServletRequest implements ServletRequest {
 
     @Override
     public String getLocalAddr() {
-        for(HeaderElement element : request.getFirstHeader("Forwarded").getElements()){
-            NameValuePair param = element.getParameterByName("for");
-            if(param != null){
-                return param.getValue();
+        for(HeaderElement element : request.getHeader("Forwarded").getElements()){
+            String value = element.getParameterByName("for");
+            if(value != null){
+                return value;
             }
         }
         return null;

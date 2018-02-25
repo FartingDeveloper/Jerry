@@ -11,8 +11,6 @@ import java.util.regex.Pattern;
 
 public class Header {
 
-    private static final String COMMA = ",";
-
     private String name;
     private String value;
 
@@ -26,7 +24,7 @@ public class Header {
     }
 
     private void collectElements(String value){
-        int separatorIndex = Syntax.getIndex(value, COMMA);
+        int separatorIndex = Syntax.getIndex(value, Syntax.ELEMENT_SEPARATOR);
 
         if(separatorIndex != -1){
             collectElements(value.substring(separatorIndex + 1, value.length()));

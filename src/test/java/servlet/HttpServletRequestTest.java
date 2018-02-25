@@ -29,7 +29,7 @@ public class HttpServletRequestTest extends ServletRequestTest {
 
         servletContext = mock(JerryServletContext.class);
         servletResponse = mock(JerryHttpServletResponse.class);
-        httpServletRequest = new JerryHttpServletRequest(httpGet, servletResponse, servletContext);
+        httpServletRequest = new JerryHttpServletRequest(request, servletResponse, servletContext);
     }
 
     @Test
@@ -42,7 +42,7 @@ public class HttpServletRequestTest extends ServletRequestTest {
                 value.append(",");
             }
         }
-        httpGet.setHeader("Cookie", value.toString());
+        request.setHeader("Cookie", value.toString());
 
         Cookie[] cookies = httpServletRequest.getCookies();
 
@@ -65,7 +65,7 @@ public class HttpServletRequestTest extends ServletRequestTest {
         String date = "Tue, 15 Nov 1994 08:12:31 GMT";
 
         long l = LocalDateTime.parse(date, DateTimeFormatter.RFC_1123_DATE_TIME).getLong(ChronoField.ERA);
-        httpGet.setHeader("Date", "Tue, 15 Nov 1994 08:12:31 GMT");
+        request.setHeader("Date", "Tue, 15 Nov 1994 08:12:31 GMT");
 
         if(l != httpServletRequest.getDateHeader(date)){
             Assert.fail();
@@ -81,8 +81,8 @@ public class HttpServletRequestTest extends ServletRequestTest {
 
     @Test
     public void getHeadersTest(){
-        httpGet.setHeader("Accept-Language", Locale.getDefault().toString() + "," + Locale.JAPAN.toString());
-        httpGet.setHeader("Accept-Language", Locale.getDefault().toString() + "," + Locale.ITALIAN.toString());
+        request.setHeader("Accept-Language", Locale.getDefault().toString() + "," + Locale.JAPAN.toString());
+        request.setHeader("Accept-Language", Locale.getDefault().toString() + "," + Locale.ITALIAN.toString());
 
         Enumeration<String> enumeration = httpServletRequest.getHeaders("Accept-Language");
         while (enumeration.hasMoreElements()){
@@ -93,7 +93,7 @@ public class HttpServletRequestTest extends ServletRequestTest {
     @Test
     public void getIntHeaderTest(){
         int value = 12;
-        httpGet.setHeader("Age", String.valueOf(value));
+        request.setHeader("Age", String.valueOf(value));
         if(httpServletRequest.getIntHeader("Age") != 12){
             Assert.fail();
         }
@@ -130,7 +130,7 @@ public class HttpServletRequestTest extends ServletRequestTest {
     @Test
     public void getRequestUrlTest(){
 
-        String uri = httpGet.getRequestLine().getUri();
+        String uri = request.getRequestLine().getUri();
         uri = uri.substring(0, uri.indexOf("?"));
 
         if(!httpServletRequest.getRequestURL().toString().equals(uri)){

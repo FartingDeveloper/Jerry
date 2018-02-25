@@ -1,8 +1,6 @@
 package servlet.context;
 
-
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
+import http.HttpResponse;
 import org.apache.logging.log4j.LogManager;
 import servlet.JerryEnumeration;
 import servlet.JerryHttpSession;

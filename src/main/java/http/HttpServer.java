@@ -41,7 +41,7 @@ public class HttpServer extends Thread{
                 threadPool.execute(()->{
                     try{
                         HttpRequest request = HttpParser.parse(socket);
-                        HttpResponse response = new HttpResponse(socket.getOutputStream());
+                        HttpResponse response = new HttpResponse(socket.getOutputStream(), request.getRequestLine().getProtocolVersion());
 
                         urls.get("url").handle(request, response);
                     } catch (IOException e) {

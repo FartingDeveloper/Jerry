@@ -6,6 +6,7 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class HttpRequestTest extends HttpMessageTest{
 
@@ -17,15 +18,27 @@ public class HttpRequestTest extends HttpMessageTest{
     public static final String VERSION = "HTTP/1.1";
     public static final String[] HEADER_NAMES = {"Accept", "Accept-Charset, Accept-Language, Host"};
     public static final String[] HEADER_VALUES = {"text/plain", "utf-8", "en-US", "en.wikipedia.org"};
+    public static final String[][] PARAMS = {{"a","b"}, {"d","c"}};
     public static RequestLine requestLine;
     public static HttpRequest request;
+
+    public static String tmpUri;
 
     @Before
     public void init(){
         super.init();
-        requestLine = new RequestLine(METHOD + SP + URI + SP + VERSION + CRLF);
+        StringBuilder builder = new StringBuilder(URI + "?");
+        for(int i = 0; i < PARAMS.length; i++){
+            builder.append(PARAMS[i][0] + "=" + PARAMS[i][1] + "&");
+        }
+
+        builder.deleteCharAt(builder.length()-1);
+        tmpUri = builder.toString();
+
+        requestLine = new RequestLine(METHOD + SP + tmpUri + SP + VERSION);
         List<Header> headerList = createList();
         request = new HttpRequest(requestLine, headerList);
+        System.out.println(request);
     }
 
     private static List<Header> createList(){
@@ -47,8 +60,19 @@ public class HttpRequestTest extends HttpMessageTest{
         if(! line.getProtocolVersion().equals(VERSION)){
             Assert.fail();
         }
-        if(! line.getUri().equals(URI)){
+
+        if(! line.getUri().equals(tmpUri)){
             Assert.fail();
+        }
+    }
+
+    @Test
+    public void getParamsTest(){
+        Map<String, String[]> map = request.getRequestParameters();
+        for(int i = 0; i < PARAMS.length; i++){
+            if(! map.get(PARAMS[i][0])[0].equals(PARAMS[i][1])){
+                Assert.fail();
+            }
         }
     }
 

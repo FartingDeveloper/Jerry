@@ -9,21 +9,18 @@ import java.util.Map;
 
 public class HeaderElement {
 
-    private static final String SEPARATOR = ";";
-    private static final String EQUALITY = "=";
-
     private String name;
     private String value;
     private Map<String, String> parameters = new HashMap<>();
 
     public HeaderElement(String element){
-        int index = Syntax.getIndex(element, SEPARATOR);
+        int index = Syntax.getIndex(element, Syntax.ELEMENT_PARAMS_SEPARATOR);
         if(index != -1){
             collectParams(element.substring(index + 1, element.length()));
             element = element.substring(0, index);
         }
 
-        int equalIndex = element.indexOf(EQUALITY);
+        int equalIndex = element.indexOf(Syntax.EQUALITY);
         if(equalIndex == -1){
             this.name = element;
             this.value = null;
@@ -35,7 +32,7 @@ public class HeaderElement {
     }
 
     private void collectParams(String parameter){
-        int separatorIndex = Syntax.getIndex(parameter, SEPARATOR);
+        int separatorIndex = Syntax.getIndex(parameter, Syntax.ELEMENT_PARAMS_SEPARATOR);
 
         if(separatorIndex != -1){
             collectParams(parameter.substring(separatorIndex + 1, parameter.length()));
@@ -44,7 +41,7 @@ public class HeaderElement {
             separatorIndex = parameter.length();
         }
 
-        int equalityIndex = parameter.indexOf(EQUALITY);
+        int equalityIndex = parameter.indexOf(Syntax.EQUALITY);
         String parameterName = parameter.substring(0, equalityIndex);
         String parameterValue = parameter.substring(equalityIndex + 1, separatorIndex);
         parameters.put(parameterName, parameterValue);

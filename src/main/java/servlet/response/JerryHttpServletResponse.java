@@ -1,9 +1,7 @@
 package servlet.response;
 
-import org.apache.http.Header;
-import org.apache.http.HeaderElement;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
+import http.Header;
+import http.HttpResponse;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.Cookie;
@@ -24,7 +22,7 @@ public class JerryHttpServletResponse extends JerryServletResponse implements Ht
 
     @Override
     public boolean containsHeader(String name) {
-        if(response.getFirstHeader(name) != null){
+        if(response.getHeader(name) != null){
             return true;
         }
         return false;
@@ -90,7 +88,7 @@ public class JerryHttpServletResponse extends JerryServletResponse implements Ht
 
     @Override
     public void addHeader(String name, String value) {
-        Header header = response.getFirstHeader(name);
+        Header header = response.getHeader(name);
         if(header != null){
             response.setHeader(name, header.getValue() + "," + value);
         }
@@ -111,22 +109,22 @@ public class JerryHttpServletResponse extends JerryServletResponse implements Ht
 
     @Override
     public void setStatus(int sc) {
-        setHeader("Status", String.valueOf(sc));
+        response.setStatusCode(sc);
     }
 
     @Override
     public void setStatus(int sc, String sm) {
-        throw new UnsupportedOperationException();
+        response.setStatus(sc, sm);
     }
 
     @Override
     public int getStatus() {
-        return 0;
+        return response.getStatusCode();
     }
 
     @Override
     public String getHeader(String name) {
-        return response.getFirstHeader(name).getValue();
+        return response.getHeader(name).getValue();
     }
 
     @Override
@@ -141,7 +139,7 @@ public class JerryHttpServletResponse extends JerryServletResponse implements Ht
     @Override
     public Collection<String> getHeaderNames() {
         ArrayList<String> list = new ArrayList<>();
-        for (Header header: response.getAllHeaders()) {
+        for (Header header: response.getHeaders()) {
             list.add(header.getName());
         }
         return list;

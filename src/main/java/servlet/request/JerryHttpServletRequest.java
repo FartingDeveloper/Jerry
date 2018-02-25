@@ -1,8 +1,9 @@
 package servlet.request;
 
-import org.apache.http.Header;
-import org.apache.http.HeaderElement;
-import org.apache.http.HttpRequest;
+import http.Header;
+import http.HeaderElement;
+import http.HttpRequest;
+import http.Syntax;
 import servlet.JerryEnumeration;
 import servlet.JerryHttpSession;
 import servlet.context.JerryServletContext;
@@ -18,7 +19,7 @@ import java.time.temporal.ChronoField;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
-import java.util.WeakHashMap;
+import java.util.List;
 
 public class JerryHttpServletRequest extends JerryServletRequest implements HttpServletRequest {
 
@@ -35,13 +36,13 @@ public class JerryHttpServletRequest extends JerryServletRequest implements Http
 
     @Override
     public Cookie[] getCookies() {
-        Header header = request.getFirstHeader("Cookie");
+        Header header = request.getHeader("Cookie");
         if(header == null){
             return null;
         }
 
-        HeaderElement[] elements = header.getElements();
-        Cookie[] cookies = new Cookie[elements.length];
+        List<HeaderElement> elements = header.getElements();
+        Cookie[] cookies = new Cookie[elements.size()];
 
         int i = 0;
         for(HeaderElement element : elements){
@@ -52,41 +53,37 @@ public class JerryHttpServletRequest extends JerryServletRequest implements Http
 
     @Override
     public long getDateHeader(String name) {
-        Header header = request.getFirstHeader("Date");
+        Header header = request.getHeader("Date");
         String value = header.getValue();
         return LocalDateTime.parse(value, DateTimeFormatter.RFC_1123_DATE_TIME).getLong(ChronoField.ERA);
     }
 
     @Override
     public String getHeader(String name) {
-        return request.getFirstHeader(name).getValue();
+        return request.getHeader(name).getValue();
     }
 
     @Override
     public Enumeration<String> getHeaders(String name) {
-        ArrayList<String> list = new ArrayList<>();
-
-        for(Header element : request.getHeaders(name)){
-            list.add(element.getValue());
+        ArrayList<String> values = new ArrayList<>();
+        for(Header header : request.getHeaders()){
+            values.add(header.getValue());
         }
-
-        return new JerryEnumeration<>(list.iterator());
+        return new JerryEnumeration<String>(values.iterator());
     }
 
     @Override
     public Enumeration<String> getHeaderNames() {
-        ArrayList<String> list = new ArrayList<>();
-
-        for(Header element : request.getAllHeaders()){
-            list.add(element.getName());
+        ArrayList<String> names = new ArrayList<>();
+        for(Header header : request.getHeaders()){
+            names.add(header.getName());
         }
-
-        return new JerryEnumeration<>(list.iterator());
+        return new JerryEnumeration<String>(names.iterator());
     }
 
     @Override
     public int getIntHeader(String name) {
-        Header header = request.getFirstHeader(name);
+        Header header = request.getHeader(name);
         if(header == null){
             return 0;
         }
@@ -117,13 +114,15 @@ public class JerryHttpServletRequest extends JerryServletRequest implements Http
 
     @Override
     public String getContextPath() {
-        return null;
+        String uri = request.getRequestLine().getUri();
+        int index = uri.indexOf("/");
+        return uri.substring(index + 1, uri.length());
     }
 
     @Override
     public String getQueryString() {
         String uri = request.getRequestLine().getUri();
-        int index = uri.indexOf("?");
+        int index = uri.indexOf(Syntax.PARAMS_START);
         if(index == -1){
             return null;
         }
@@ -209,7 +208,7 @@ public class JerryHttpServletRequest extends JerryServletRequest implements Http
 
     @Override
     public boolean isRequestedSessionIdFromCookie() {
-        for(HeaderElement element : request.getFirstHeader("Cookie").getElements()){
+        for(HeaderElement element : request.getHeader("Cookie").getElements()){
             if(element.getName().equals("JSESSIONID")){
                 return true;
             }

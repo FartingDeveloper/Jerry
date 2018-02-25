@@ -15,5 +15,4 @@ public class HttpParserTest {
         HttpRequest request = HttpParser.parse(socket);
         System.out.println(request.toString());
     }
-
 }
