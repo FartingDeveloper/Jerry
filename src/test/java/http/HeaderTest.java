@@ -1,7 +1,5 @@
 package http;
 
-import http.Header;
-import http.HeaderElement;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -56,18 +54,19 @@ public class HeaderTest {
 
     @Test
     public void getElementsTest(){
+        int lenght = ELEMENT_NAMES.length - 1;
         List<HeaderElement> elements = header.getElements();
         for (int i = 0; i < elements.size(); i++){
             HeaderElement element = elements.get(i);
-            if(! element.getName().equals(ELEMENT_NAMES[i])){
+            if(! element.getName().equals(ELEMENT_NAMES[lenght - i])){
                 Assert.fail();
             }
-            if(! element.getValue().equals(ELEMENT_VALUES[i])){
+            if(! element.getValue().equals(ELEMENT_VALUES[lenght - i])){
                 Assert.fail();
             }
 
-            for(int j = 0; j < PARAMS[i].length - 1; j++){
-                if(element.getParameterByName(PARAMS[i][j]).equals(PARAMS[i][j+1])){
+            for(int j = 0; j < PARAMS[lenght - i].length - 1; j++){
+                if(! element.getParameterByName(PARAMS[lenght - i][j]).equals(PARAMS[lenght - i][j+1])){
                     Assert.fail();
                 }
             }

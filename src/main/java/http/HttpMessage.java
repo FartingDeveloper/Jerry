@@ -1,11 +1,10 @@
 package http;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class HttpMessage {
 
-    private List<Header> headers;
+    protected List<Header> headers;
     protected String content;
 
     public HttpMessage(List<Header> headers){

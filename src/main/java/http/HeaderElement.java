@@ -17,29 +17,25 @@ public class HeaderElement {
     private Map<String, String> parameters = new HashMap<>();
 
     public HeaderElement(String element){
-        element.trim();
+        int index = Syntax.getIndex(element, SEPARATOR);
+        if(index != -1){
+            collectParams(element.substring(index + 1, element.length()));
+            element = element.substring(0, index);
+        }
 
         int equalIndex = element.indexOf(EQUALITY);
-
         if(equalIndex == -1){
             this.name = element;
-        }else{
+            this.value = null;
+        }
+        else{
             this.name = element.substring(0, equalIndex);
-            int index = element.indexOf(SEPARATOR);
-
-            if(index != -1){
-                collectParams(element.substring(index + 1, element.length()));
-                this.value = element.substring(equalIndex + 1, index);
-            }
-            else{
-                element = element.substring(0, element.length());
-                this.value = element.substring(equalIndex + 1, element.length());
-            }
+            this.value = element.substring(equalIndex + 1, element.length());
         }
     }
 
     private void collectParams(String parameter){
-        int separatorIndex = parameter.indexOf(SEPARATOR);
+        int separatorIndex = Syntax.getIndex(parameter, SEPARATOR);
 
         if(separatorIndex != -1){
             collectParams(parameter.substring(separatorIndex + 1, parameter.length()));
@@ -69,4 +65,5 @@ public class HeaderElement {
     public String getParameterByName(String name){
         return parameters.get(name);
     }
+
 }

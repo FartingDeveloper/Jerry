@@ -40,8 +40,8 @@ public class HttpServer extends Thread{
                 Socket socket = serverSocket.accept();
                 threadPool.execute(()->{
                     try{
-                        HttpRequest request = HttpParser.parse(socket);;
-                        HttpResponse response = null;
+                        HttpRequest request = HttpParser.parse(socket);
+                        HttpResponse response = new HttpResponse(socket.getOutputStream());
 
                         urls.get("url").handle(request, response);
                     } catch (IOException e) {

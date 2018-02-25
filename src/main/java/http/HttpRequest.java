@@ -28,4 +28,13 @@ public class HttpRequest extends HttpMessage{
         }
         return new ByteArrayInputStream(getContent().getBytes());
     }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder(requestLine.toString() + "\r\n");
+        for (Header header : headers){
+            builder.append(header.toString() + "\r\n");
+        }
+        return builder.toString();
+    }
 }

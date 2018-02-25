@@ -2,6 +2,8 @@ package http;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 //      header  = [ element ] *( "," [ element ] )"," [ element ] )
 //      element = name [ "=" [ value ] ] *( ";" [ param ] )
@@ -24,7 +26,7 @@ public class Header {
     }
 
     private void collectElements(String value){
-        int separatorIndex = value.indexOf(COMMA);
+        int separatorIndex = Syntax.getIndex(value, COMMA);
 
         if(separatorIndex != -1){
             collectElements(value.substring(separatorIndex + 1, value.length()));
@@ -33,7 +35,7 @@ public class Header {
             separatorIndex = value.length();
         }
 
-        HeaderElement element = new HeaderElement(value.substring(0, separatorIndex));
+        elements.add(new HeaderElement(value.substring(0, separatorIndex)));
     }
 
     public String getName() {
@@ -46,5 +48,10 @@ public class Header {
 
     public List<HeaderElement> getElements() {
         return elements;
+    }
+
+    @Override
+    public String toString() {
+        return name + ": " + value;
     }
 }
