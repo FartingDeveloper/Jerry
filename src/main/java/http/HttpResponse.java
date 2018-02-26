@@ -1,7 +1,7 @@
 package http;
 
-import http.io.ByteOutputStream;
-
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,20 +11,22 @@ public class HttpResponse extends HttpMessage{
     private String protocolVersion;
 
     private String status;
-    private int statusCode;
+    private int statusCode = -1;
 
     private OutputStream outputStream;
-    private ByteOutputStream contentOutputStream;
+    private ByteArrayOutputStream contentOutputStream;
 
-    public HttpResponse(OutputStream outputStream, String protocolVersion){
-        this(outputStream, protocolVersion, new ArrayList<>());
+    private boolean commited;
+
+    public HttpResponse(OutputStream outputStream, RequestLine line){
+        this(outputStream, line.getProtocolVersion(), new ArrayList<>());
     }
 
     public HttpResponse(OutputStream outputStream, String protocolVersion, List<Header> headers){
         super(headers);
         this.outputStream = outputStream;
         this.protocolVersion = protocolVersion;
-        contentOutputStream = new ByteOutputStream();
+        contentOutputStream = new ByteArrayOutputStream();
     }
 
     public String getStatus() {
@@ -40,14 +42,39 @@ public class HttpResponse extends HttpMessage{
     }
 
     public void setStatus(int code, String status){
-        this.status = code + " " + status;
+        this.status = code + Syntax.SP + status;
     }
 
     public OutputStream getContentOutputStream(){
         return contentOutputStream;
     }
 
-    public OutputStream getOutputStream() {
-        return outputStream;
+    public void flush() throws IOException {
+        if(! commited){
+            commited = true;
+
+            String responseLine = protocolVersion + Syntax.SP + statusCode + Syntax.SP + status + Syntax.CRLF;
+            outputStream.write(responseLine.getBytes());
+
+            for (Header header : headers){
+                String result = header + Syntax.CRLF;
+                outputStream.write(result.getBytes());
+            }
+
+            outputStream.write(Syntax.CRLF.getBytes());
+            outputStream.write(contentOutputStream.toByteArray());
+            outputStream.flush();
+
+            contentOutputStream.reset();
+        }
+
+        outputStream.write(contentOutputStream.toByteArray());
+        outputStream.flush();
+
+        contentOutputStream.reset();
+    }
+
+    public boolean isCommited() {
+        return commited;
     }
 }

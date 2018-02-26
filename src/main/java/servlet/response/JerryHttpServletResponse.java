@@ -11,8 +11,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 public class JerryHttpServletResponse extends JerryServletResponse implements HttpServletResponse{
+
     public JerryHttpServletResponse(HttpResponse response, ServletContext servletContext) {
         super(response, servletContext);
+        response.setHeader("Content-Type", "text/html");
     }
 
     @Override
@@ -50,25 +52,23 @@ public class JerryHttpServletResponse extends JerryServletResponse implements Ht
 
     @Override
     public void sendError(int sc, String msg) throws IOException {
-        if(isCommitted()){
-            throw new IllegalStateException();
-        }
-
-        response.setHeader("Status", String.valueOf(sc) + " " + msg);
+        checkCommit();
+        response.setStatus(sc, msg);
+        response.flush();
     }
 
     @Override
     public void sendError(int sc) throws IOException {
-        if(isCommitted()){
-            throw new IllegalStateException();
-        }
-
-        response.setHeader("Status", String.valueOf(sc));
+        checkCommit();
+        response.setStatusCode(sc);
+        response.flush();
     }
 
     @Override
     public void sendRedirect(String location) throws IOException {
+        checkCommit();
         response.setHeader("Location", location);
+        response.flush();
     }
 
     @Override

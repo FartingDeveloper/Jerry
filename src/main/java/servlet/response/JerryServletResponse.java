@@ -19,18 +19,17 @@ public class JerryServletResponse implements ServletResponse {
     protected HttpResponse response;
     protected ServletContext servletContext;
 
-    private JerryServletOutputStream outputStream;
-    private PrintWriter writer;
+    private JerryServletOutputStream contentOutputStream;
+    private PrintWriter contentWriter;
 
-    private boolean commited;
     private boolean contentOutputStreamIsCalled;
     private boolean contentWriterIsCalled;
 
     public JerryServletResponse(HttpResponse response, ServletContext servletContext){
         this.response = response;
         this.servletContext = servletContext;
-        outputStream = new JerryServletOutputStream(response);
-        writer = new PrintWriter(outputStream);
+        contentOutputStream = new JerryServletOutputStream(response);
+        contentWriter = new PrintWriter(contentOutputStream);
     }
 
     @Override
@@ -47,106 +46,79 @@ public class JerryServletResponse implements ServletResponse {
 
     @Override
     public ServletOutputStream getOutputStream() throws IOException {
-        if(checkEncoding()){
-            throw new UnsupportedEncodingException();
-        }
         if(contentWriterIsCalled){
             throw new IllegalStateException();
         }
         contentOutputStreamIsCalled = true;
-        return outputStream;
+        return contentOutputStream;
     }
 
     @Override
     public PrintWriter getWriter() throws IOException {
-        if(checkEncoding()){
+        if(getCharacterEncoding() == null){
             throw new UnsupportedEncodingException();
         }
         if(contentOutputStreamIsCalled){
             throw new IllegalStateException();
         }
         contentWriterIsCalled = true;
-        return writer;
-    }
-
-    private boolean checkEncoding(){
-        if(getCharacterEncoding() == null){
-            return true;
-        }
-        return false;
+        return contentWriter;
     }
 
     @Override
     public void setCharacterEncoding(String charset) {
-        if(commited){
-            throw new IllegalStateException();
-        }
+        checkCommit();
         response.setHeader("Content-Type", response.getHeader("Content-Type").getName() + Syntax.ELEMENT_PARAMS_SEPARATOR + "charset=" + charset);
     }
 
     @Override
     public void setContentLength(int len) {
-        if(commited){
-            throw new IllegalStateException();
-        }
+        checkCommit();
         response.setHeader("Content-Length", String.valueOf(len));
     }
 
     @Override
     public void setContentLengthLong(long len) {
-        if(commited){
-            throw new IllegalStateException();
-        }
+        checkCommit();
         response.setHeader("Content-Length", String.valueOf(len));
     }
 
     @Override
     public void setContentType(String type) {
-        if(commited){
-            throw new IllegalStateException();
-        }
+        checkCommit();
         response.setHeader("Content-Type", type);
     }
 
     @Override
     public void setBufferSize(int size) {
-        if(commited){
-            throw new IllegalStateException();
-        }
-        outputStream.setBufferSize(size);
+        checkCommit();
+        contentOutputStream.setBufferSize(size);
     }
 
     @Override
     public int getBufferSize() {
-        return outputStream.getBufferSize();
+        return contentOutputStream.getBufferSize();
     }
 
     @Override
     public void flushBuffer() throws IOException {
-        commit();
-        outputStream.flush();
+        contentOutputStream.flush();
     }
 
     @Override
     public void resetBuffer() {
-        outputStream.resetBuffer();
+        contentOutputStream.resetBuffer();
     }
 
     @Override
     public boolean isCommitted() {
-        return commited || outputStream.isFlushed();
-    }
-
-    public void commit(){
-        commited = true;
+        return response.isCommited();
     }
 
     @Override
     public void reset() {
-        if(commited){
-            throw new IllegalStateException();
-        }
-        outputStream.resetBuffer();
+        checkCommit();
+        contentOutputStream.resetBuffer();
     }
 
     @Override
@@ -162,5 +134,11 @@ public class JerryServletResponse implements ServletResponse {
 
     public HttpResponse getResponse() {
         return response;
+    }
+
+    protected void checkCommit(){
+        if(isCommitted()){
+            throw new IllegalStateException();
+        }
     }
 }

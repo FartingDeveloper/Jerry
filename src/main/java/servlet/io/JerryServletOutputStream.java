@@ -5,24 +5,20 @@ import http.HttpResponse;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.WriteListener;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.Arrays;
 
 public class JerryServletOutputStream extends ServletOutputStream {
 
-    private OutputStream outputStream;
-    private OutputStream contentOutputStream;
+    private HttpResponse response;
 
     private byte[] buffer;
     private int bufferSize;
     private int bufferIndex;
 
-    private boolean flushed;
-
     private WriteListener writeListener;
 
     public JerryServletOutputStream(HttpResponse response){
-        contentOutputStream = response.getContentOutputStream();
+        this.response = response;
         bufferSize = 1024;
         bufferIndex = 0;
         buffer = new byte[1024];
@@ -42,8 +38,11 @@ public class JerryServletOutputStream extends ServletOutputStream {
     public void write(int b) throws IOException {
         if(bufferIndex < bufferSize){
             writeListener.onWritePossible();
+            buffer[bufferIndex++] = (byte) b;
         }
-        contentOutputStream.write(b);
+        else{
+            flush();
+        }
     }
 
     public int getBufferSize() {
@@ -61,11 +60,11 @@ public class JerryServletOutputStream extends ServletOutputStream {
 
     @Override
     public void flush() throws IOException {
-        super.flush();
-        flushed = true;
-    }
+        for(int i = 0; i < bufferIndex; i++){
+            response.getContentOutputStream().write(buffer[i]);
+        }
+        bufferIndex = 0;
 
-    public boolean isFlushed() {
-        return flushed;
+        response.flush();
     }
 }
