@@ -19,6 +19,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
+import java.lang.management.ManagementFactory;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -70,8 +71,7 @@ public class ContextLoader implements Loader<Map<String, JerryServletContext>> {
         File classes = new File(file.getAbsolutePath() + File.separator + WEB_INF + File.separator + CLASSES);
         classLoader = loadClasses(jars, classes);
 
-        File resourcesPath = new File(file.getAbsolutePath() + File.separator + WEB_INF);
-        resources = loadResources(resourcesPath);
+        resources = loadResources(file);
 
         File webXml = new File(file.getAbsolutePath() + File.separator + WEB_INF + File.separator + WEB_XML);
         logger.debug("Parsing web.xml from:" + file.getName());
@@ -79,9 +79,16 @@ public class ContextLoader implements Loader<Map<String, JerryServletContext>> {
         return parser.parseWebXml(webXml);
     }
 
-    private Set<String> loadResources(File resources){
-
-        return null;
+    private Set<String> loadResources(File folder){
+        Set<String> res = new HashSet<>();
+        for (File fileEntry : folder.listFiles()) {
+            if (fileEntry.isDirectory()) {
+               res.addAll(loadResources(fileEntry));
+            } else {
+                res.add(fileEntry.getPath());
+            }
+        }
+        return res;
     }
 
     private ClassLoader loadClasses(File jars, File classes){
@@ -111,11 +118,19 @@ public class ContextLoader implements Loader<Map<String, JerryServletContext>> {
         File webapps = new File(path);
         for (File app : webapps.listFiles()){
             if(isWar(app)){
+                JarFile war = null;
                 try {
-                    JarFile war = new JarFile(app);
-                    extractWar(war, app.getAbsolutePath());
+                    war = new JarFile(app);
+                    extractWar(war);
                 } catch (IOException e) {
                     logger.error("WAR unzipping error.");
+                }
+                finally {
+                    try {
+                        war.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
@@ -126,15 +141,15 @@ public class ContextLoader implements Loader<Map<String, JerryServletContext>> {
         String extension;
         if(fileName.lastIndexOf(".") != -1 && fileName.lastIndexOf(".") != 0) {
             extension = fileName.substring(fileName.lastIndexOf(".")+1);
-            if(extension == "war"){
+            if(extension.equals("war")){
                 return true;
             }
         }
         return false;
     }
 
-    private File extractWar(JarFile war, String outputPath){
-        String outputDirName = makeOutputDir(war.getName(), outputPath);
+    private File extractWar(JarFile war){
+        String outputDirName = makeOutputDir(war.getName());
         File outputDir = new File(outputDirName);
 
         if(! outputDir.exists()){
@@ -146,28 +161,36 @@ public class ContextLoader implements Loader<Map<String, JerryServletContext>> {
         while (entries.hasMoreElements()){
             JarEntry entry = entries.nextElement();
             File file = new File(outputDirName + File.separator + entry.getName());
-            new File(file.getParent()).mkdirs(); //sub directories
+            if(entry.isDirectory()){
+                file.mkdir();
+                continue;
+            }
 
             try(InputStream in = war.getInputStream(entry); OutputStream out = new FileOutputStream(file)) {
-                BufferedInputStream bufferedIn = new BufferedInputStream(in);
-                BufferedOutputStream bufferedOut = new BufferedOutputStream(out);
-                byte[] buffer = new byte[1024];
+                BufferedInputStream bufferedInputStream = new BufferedInputStream(in, 1024);
+                BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(out, 1024);
 
-                while (bufferedIn.read(buffer) != -1){
-                    bufferedOut.write(buffer);
-                    bufferedOut.flush();
+                while (bufferedInputStream.available() > 0){
+                    bufferedOutputStream.write(bufferedInputStream.read());
                 }
 
+                bufferedOutputStream.flush();
             } catch (IOException e) {
                 logger.error("WAR extracting error.");
             }
+
+            if(entries.hasMoreElements() == false){
+                System.out.println("FART");
+            }
         }
+
 
         return outputDir;
     }
 
-    private String makeOutputDir(String warName, String outputPath){
-        return outputPath.substring(0, outputPath.lastIndexOf(warName));
+    private String makeOutputDir(String warName){
+        int index = warName.indexOf(".war");
+        return warName.substring(0, index);
     }
 
     private class WebXmlParser {
@@ -176,7 +199,7 @@ public class ContextLoader implements Loader<Map<String, JerryServletContext>> {
 
         public JerryServletContext parseWebXml(File file){
 
-            servletContext = new JerryServletContext(contexts, classLoader);
+            servletContext = new JerryServletContext(contexts, resources, classLoader);
             servletContext.setContextPath(file.getName());
 
             try {
@@ -308,11 +331,19 @@ public class ContextLoader implements Loader<Map<String, JerryServletContext>> {
                 }
             }
 
-            servletContext.getFilterRegistration(filterName).addMappingForUrlPatterns(EnumSet.copyOf(dispatcherTypeSet),
-                    false, filterPatterns.toArray(new String[filterPatterns.size()]));
+            if(dispatcherTypeSet.isEmpty()){
+                servletContext.getFilterRegistration(filterName).addMappingForUrlPatterns(null,
+                        false, filterPatterns.toArray(new String[filterPatterns.size()]));
 
-            servletContext.getFilterRegistration(filterName).addMappingForServletNames(EnumSet.copyOf(dispatcherTypeSet),
-                    false, servletNames.toArray(new String[servletNames.size()]));
+                servletContext.getFilterRegistration(filterName).addMappingForServletNames(null,
+                        false, servletNames.toArray(new String[servletNames.size()]));
+            } else{
+                servletContext.getFilterRegistration(filterName).addMappingForUrlPatterns(EnumSet.copyOf(dispatcherTypeSet),
+                        false, filterPatterns.toArray(new String[filterPatterns.size()]));
+
+                servletContext.getFilterRegistration(filterName).addMappingForServletNames(EnumSet.copyOf(dispatcherTypeSet),
+                        false, servletNames.toArray(new String[servletNames.size()]));
+            }
     }
 
         private void collectServlets(Node obj){

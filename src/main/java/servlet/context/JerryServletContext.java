@@ -60,8 +60,9 @@ public class JerryServletContext implements ServletContext {
 
     private org.apache.logging.log4j.Logger logger = LogManager.getLogger("servlet.context.JerryServletContext");
 
-    public JerryServletContext(Map<String, JerryServletContext> contexts, ClassLoader classLoader){
+    public JerryServletContext(Map<String, JerryServletContext> contexts, Set<String> resourcePaths, ClassLoader classLoader){
         this.contexts = contexts;
+        this.resourcePaths = resourcePaths;
         this.classLoader = classLoader;
 
         this.contextPath = "";

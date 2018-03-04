@@ -1,13 +1,16 @@
 package servlet;
 
+import loader.ContextLoader;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
+import servlet.context.JerryServletContext;
 
 import javax.servlet.*;
 import java.util.Enumeration;
 
-public class ServletContextTest extends WebXmlParserTest {
+public class ServletContextTest extends ContextLoaderTest {
 
     @Test
     public void getContextPathTest(){
@@ -41,35 +44,35 @@ public class ServletContextTest extends WebXmlParserTest {
 
     @Test
     public void getRequestDispatcherTest(){
-        if(WebXmlParserTest.servletContext.getRequestDispatcher("/login") == null){
+        if(jerryServletContext.getRequestDispatcher("/login") == null){
             Assert.fail();
         }
     }
 
     @Test
     public void getNamedDispatcherTest(){
-        if(WebXmlParserTest.servletContext.getNamedDispatcher("login") == null){
+        if(jerryServletContext.getNamedDispatcher("login") == null){
             Assert.fail();
         }
     }
 
     @Test
     public void getServletTest() throws ServletException {
-        if(WebXmlParserTest.servletContext.getServlet("") != null){
+        if(jerryServletContext.getServlet("") != null){
             Assert.fail();
         }
     }
 
     @Test
     public void getServletsTest(){
-        if(WebXmlParserTest.servletContext.getServlets().hasMoreElements() != false){
+        if(jerryServletContext.getServlets().hasMoreElements() != false){
             Assert.fail();
         }
     }
 
     @Test
     public void getServletNamesTest(){
-        if(WebXmlParserTest.servletContext.getServletNames().hasMoreElements() != false){
+        if(jerryServletContext.getServletNames().hasMoreElements() != false){
             Assert.fail();
         }
     }
@@ -81,19 +84,19 @@ public class ServletContextTest extends WebXmlParserTest {
 
     @Test
     public void getInitParameterTest(){
-        if(! WebXmlParserTest.servletContext.getInitParameter("springConfig").equals("config.xml")){
+        if(! jerryServletContext.getInitParameter("springConfig").equals("config.xml")){
             Assert.fail();
         }
     }
 
     @Test(expected = NullPointerException.class)
     public void getNullInitParameterTest(){
-        WebXmlParserTest.servletContext.getInitParameter(null);
+        jerryServletContext.getInitParameter(null);
     }
 
     @Test
     public void getInitParameterNamesTest(){
-        Enumeration<String> enumeration = WebXmlParserTest.servletContext.getInitParameterNames();
+        Enumeration<String> enumeration = jerryServletContext.getInitParameterNames();
         while (enumeration.hasMoreElements()){
             if (! enumeration.nextElement().equals("springConfig")){
                 Assert.fail();
@@ -105,21 +108,21 @@ public class ServletContextTest extends WebXmlParserTest {
     public void setInitParameterTest(){
         String name = "Homer";
         String value = "Bart";
-        WebXmlParserTest.servletContext.setInitParameter(name, value);
+        jerryServletContext.setInitParameter(name, value);
     }
 
     @Test(expected = NullPointerException.class)
     public void setNullInitParameterTest(){
-        WebXmlParserTest.servletContext.setInitParameter(null, null);
+        jerryServletContext.setInitParameter(null, null);
     }
 
     @Test
     public void setAndGetAttributeTest(){
         String name = "Homer";
         String value = "Bart";
-        WebXmlParserTest.servletContext.setAttribute(name, value);
+        jerryServletContext.setAttribute(name, value);
 
-        if (! WebXmlParserTest.servletContext.getAttribute(name).equals(value)){
+        if (! jerryServletContext.getAttribute(name).equals(value)){
             Assert.fail();
         }
     }
@@ -128,7 +131,7 @@ public class ServletContextTest extends WebXmlParserTest {
     public void setNullAttributeTest(){
         String name = null;
         String value = "Bart";
-        WebXmlParserTest.servletContext.setAttribute(name, value);
+        jerryServletContext.setAttribute(name, value);
     }
 
     @Test
@@ -137,10 +140,10 @@ public class ServletContextTest extends WebXmlParserTest {
         String[] values = {"Bart", "Lisa"};
 
         for (int i = 0; i < names.length; i++){
-            WebXmlParserTest.servletContext.setAttribute(names[i], values[i]);
+            jerryServletContext.setAttribute(names[i], values[i]);
         }
 
-        Enumeration<String> namesEnum = WebXmlParserTest.servletContext.getAttributeNames();
+        Enumeration<String> namesEnum = jerryServletContext.getAttributeNames();
 
         while (namesEnum.hasMoreElements()){
             boolean result = false;
@@ -159,16 +162,16 @@ public class ServletContextTest extends WebXmlParserTest {
 
     @Test(expected = NullPointerException.class)
     public void getNullAttributeTest(){
-        WebXmlParserTest.servletContext.getAttribute(null);
+        jerryServletContext.getAttribute(null);
     }
 
     @Test
     public void removeAttributeTest(){
         String name = "Homer";
         String value = "Bart";
-        WebXmlParserTest.servletContext.setAttribute(name, value);
-        WebXmlParserTest.servletContext.removeAttribute(name);
-        if(WebXmlParserTest.servletContext.getAttribute(name) != null){
+        jerryServletContext.setAttribute(name, value);
+        jerryServletContext.removeAttribute(name);
+        if(jerryServletContext.getAttribute(name) != null){
             Assert.fail();
         }
     }
@@ -176,269 +179,269 @@ public class ServletContextTest extends WebXmlParserTest {
 
     @Test
     public void addServletWithNameAndClassNameTest(){
-        WebXmlParserTest.servletContext.setInitialized(false);
+        jerryServletContext.setInitialized(false);
 
         String name = "Homer";
         String servletClass = "Homer.class";
-        ServletRegistration servletRegistration = WebXmlParserTest.servletContext.addServlet(name, servletClass);
-        if(WebXmlParserTest.servletContext.getServletRegistration(name) != servletRegistration){
+        ServletRegistration servletRegistration = jerryServletContext.addServlet(name, servletClass);
+        if(jerryServletContext.getServletRegistration(name) != servletRegistration){
             Assert.fail();
         }
     }
 
     @Test
     public void addServletWithRepeatedNameAndClassNameTest(){
-        WebXmlParserTest.servletContext.setInitialized(false);
+        jerryServletContext.setInitialized(false);
 
         String name = "Homer";
         String servletClass = "Homer.class";
-        WebXmlParserTest.servletContext.addServlet(name, servletClass);
-        if(WebXmlParserTest.servletContext.addServlet(name, servletClass) != null){
+        jerryServletContext.addServlet(name, servletClass);
+        if(jerryServletContext.addServlet(name, servletClass) != null){
             Assert.fail();
         }
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void addServletWithNullNameAndClassNameTest(){
-        WebXmlParserTest.servletContext.setInitialized(false);
+        jerryServletContext.setInitialized(false);
 
         String name = null;
         String servletClass = "Homer.class";
-        WebXmlParserTest.servletContext.addServlet(name, servletClass);
+        jerryServletContext.addServlet(name, servletClass);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void addServletWithEmptyNameAndClassNameTest(){
-        WebXmlParserTest.servletContext.setInitialized(false);
+        jerryServletContext.setInitialized(false);
 
         String name = "";
         String servletClass = "Homer.class";
-        WebXmlParserTest.servletContext.addServlet(name, servletClass);
+        jerryServletContext.addServlet(name, servletClass);
     }
 
     @Test(expected = IllegalStateException.class)
     public void addServletWithNameAndClassNameToInitializedContextTest(){
         String name = "Homer";
         String servletClass = "Homer.class";
-        WebXmlParserTest.servletContext.addServlet(name, servletClass);
+        jerryServletContext.addServlet(name, servletClass);
     }
 
     @Test
     public void addServletWithNameAndServletTest(){
-        WebXmlParserTest.servletContext.setInitialized(false);
+        jerryServletContext.setInitialized(false);
 
         String name = "Homer";
         Servlet servlet = Mockito.mock(Servlet.class);
-        ServletRegistration servletRegistration = WebXmlParserTest.servletContext.addServlet(name, servlet);
-        if(WebXmlParserTest.servletContext.getServletRegistration(name) != servletRegistration){
+        ServletRegistration servletRegistration = jerryServletContext.addServlet(name, servlet);
+        if(jerryServletContext.getServletRegistration(name) != servletRegistration){
             Assert.fail();
         }
     }
 
     @Test
     public void addServletWithRepeatedNameAndServletTest(){
-        WebXmlParserTest.servletContext.setInitialized(false);
+        jerryServletContext.setInitialized(false);
 
         String name = "Homer";
         Servlet servlet = Mockito.mock(Servlet.class);
-        WebXmlParserTest.servletContext.addServlet(name, servlet);
-        if(WebXmlParserTest.servletContext.addServlet(name, servlet) != null){
+        jerryServletContext.addServlet(name, servlet);
+        if(jerryServletContext.addServlet(name, servlet) != null){
             Assert.fail();
         }
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void addServletWithNullNameAndServletTest(){
-        WebXmlParserTest.servletContext.setInitialized(false);
+        jerryServletContext.setInitialized(false);
 
         String name = null;
         Servlet servlet = null;
-        WebXmlParserTest.servletContext.addServlet(name, servlet);
+        jerryServletContext.addServlet(name, servlet);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void addServletWithEmptyNameAnServletTest(){
-        WebXmlParserTest.servletContext.setInitialized(false);
+        jerryServletContext.setInitialized(false);
 
         String name = "";
         Servlet servlet = null;
-        WebXmlParserTest.servletContext.addServlet(name, servlet);
+        jerryServletContext.addServlet(name, servlet);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void addServletWithNameAndSingleThreadModelServletTest(){
-        WebXmlParserTest.servletContext.setInitialized(false);
+        jerryServletContext.setInitialized(false);
 
         String name = "Homer";
         Servlet servlet = Mockito.mock(Servlet.class, Mockito.withSettings().extraInterfaces(SingleThreadModel.class));
 
-        WebXmlParserTest.servletContext.addServlet(name, servlet);
+        jerryServletContext.addServlet(name, servlet);
     }
 
     @Test(expected = IllegalStateException.class)
     public void addServletWithNameAndServletToInitializedContextTest(){
         String name = "Homer";
         Class<? extends Servlet> servletClass = Mockito.mock(Servlet.class).getClass();
-        WebXmlParserTest.servletContext.addServlet(name, servletClass);
+        jerryServletContext.addServlet(name, servletClass);
     }
 
     @Test
     public void addServletWithNameAndClassTest(){
-        WebXmlParserTest.servletContext.setInitialized(false);
+        jerryServletContext.setInitialized(false);
 
         String name = "Homer";
         Class<? extends Servlet> servletClass = Mockito.mock(Servlet.class).getClass();
-        WebXmlParserTest.servletContext.addServlet(name, servletClass);
-        if(WebXmlParserTest.servletContext.getServletRegistration(name) == null){
+        jerryServletContext.addServlet(name, servletClass);
+        if(jerryServletContext.getServletRegistration(name) == null){
             Assert.fail();
         }
     }
 
     @Test
     public void addServletWithRepeatedNameAndClassTest(){
-        WebXmlParserTest.servletContext.setInitialized(false);
+        jerryServletContext.setInitialized(false);
 
         String name = "Homer";
         Class<? extends Servlet> servletClass = Mockito.mock(Servlet.class).getClass();
-        WebXmlParserTest.servletContext.addServlet(name, servletClass);
-        if(WebXmlParserTest.servletContext.addServlet(name, servletClass) != null){
+        jerryServletContext.addServlet(name, servletClass);
+        if(jerryServletContext.addServlet(name, servletClass) != null){
             Assert.fail();
         }
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void addServletWithNullNameAndClassTest(){
-        WebXmlParserTest.servletContext.setInitialized(false);
+        jerryServletContext.setInitialized(false);
 
         String name = null;
         Class<? extends Servlet> servletClass = Mockito.mock(Servlet.class).getClass();
-        WebXmlParserTest.servletContext.addServlet(name, servletClass);
+        jerryServletContext.addServlet(name, servletClass);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void addServletWithEmptyNameAndClassTest(){
-        WebXmlParserTest.servletContext.setInitialized(false);
+        jerryServletContext.setInitialized(false);
 
         String name = "";
         Class<? extends Servlet> servletClass = Mockito.mock(Servlet.class).getClass();
-        WebXmlParserTest.servletContext.addServlet(name, servletClass);
+        jerryServletContext.addServlet(name, servletClass);
     }
 
     @Test(expected = IllegalStateException.class)
     public void addServletWithNameAndClassToInitializedContextTest(){
         String name = "Homer";
         Class<? extends Servlet> servletClass = Mockito.mock(Servlet.class).getClass();
-        WebXmlParserTest.servletContext.addServlet(name, servletClass);
+        jerryServletContext.addServlet(name, servletClass);
     }
 
     @Test
     public void addFilterWithNameAndClassNameTest(){
-        WebXmlParserTest.servletContext.setInitialized(false);
+        jerryServletContext.setInitialized(false);
 
         String name = "Homer";
         String filterClass = "Homer.class";
-        FilterRegistration filterRegistration = WebXmlParserTest.servletContext.addFilter(name, filterClass);
-        if(WebXmlParserTest.servletContext.getFilterRegistration(name) != filterRegistration){
+        FilterRegistration filterRegistration = jerryServletContext.addFilter(name, filterClass);
+        if(jerryServletContext.getFilterRegistration(name) != filterRegistration){
             Assert.fail();
         }
     }
 
     @Test
     public void addFilterWithRepeatedNameAndClassNameTest(){
-        WebXmlParserTest.servletContext.setInitialized(false);
+        jerryServletContext.setInitialized(false);
 
         String name = "Homer";
         String filterClass = "Homer.class";
-        WebXmlParserTest.servletContext.addFilter(name, filterClass);
-        if(WebXmlParserTest.servletContext.addFilter(name, filterClass) != null){
+        jerryServletContext.addFilter(name, filterClass);
+        if(jerryServletContext.addFilter(name, filterClass) != null){
             Assert.fail();
         }
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void addFilterWithNullNameAndClassNameTest(){
-        WebXmlParserTest.servletContext.setInitialized(false);
+        jerryServletContext.setInitialized(false);
 
         String name = null;
         String filterClass = "Homer.class";
-        WebXmlParserTest.servletContext.addFilter(name, filterClass);
+        jerryServletContext.addFilter(name, filterClass);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void addFilterWithEmptyNameAndClassNameTest(){
-        WebXmlParserTest.servletContext.setInitialized(false);
+        jerryServletContext.setInitialized(false);
 
         String name = "";
         String filterClass = "Homer.class";
-        WebXmlParserTest.servletContext.addFilter(name, filterClass);
+        jerryServletContext.addFilter(name, filterClass);
     }
 
     @Test(expected = IllegalStateException.class)
     public void addFilterWithNameAndClassNameToInitializedContextTest(){
         String name = "Homer";
         String filterClass = "Homer.class";
-        WebXmlParserTest.servletContext.addFilter(name, filterClass);
+        jerryServletContext.addFilter(name, filterClass);
     }
 
     @Test
     public void addFilterWithNameAndFilterTest(){
-        WebXmlParserTest.servletContext.setInitialized(false);
+        jerryServletContext.setInitialized(false);
 
         String name = "Homer";
         Filter filter = Mockito.mock(Filter.class);
-        FilterRegistration filterRegistration = WebXmlParserTest.servletContext.addFilter(name, filter);
-        if(WebXmlParserTest.servletContext.getFilterRegistration(name) != filterRegistration){
+        FilterRegistration filterRegistration = jerryServletContext.addFilter(name, filter);
+        if(jerryServletContext.getFilterRegistration(name) != filterRegistration){
             Assert.fail();
         }
     }
 
     @Test
     public void addFilterWithRepeatedNameAndFilterTest(){
-        WebXmlParserTest.servletContext.setInitialized(false);
+        jerryServletContext.setInitialized(false);
 
         String name = "Homer";
         Filter filter = Mockito.mock(Filter.class);
-        WebXmlParserTest.servletContext.addFilter(name, filter);
-        if(WebXmlParserTest.servletContext.addFilter(name, filter) != null){
+        jerryServletContext.addFilter(name, filter);
+        if(jerryServletContext.addFilter(name, filter) != null){
             Assert.fail();
         }
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void addFilterWithNullNameAndFilterTest(){
-        WebXmlParserTest.servletContext.setInitialized(false);
+        jerryServletContext.setInitialized(false);
 
         String name = null;
         Filter filter = Mockito.mock(Filter.class);
-        WebXmlParserTest.servletContext.addFilter(name, filter);
+        jerryServletContext.addFilter(name, filter);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void addFilterWithEmptyNameAndFilterTest(){
-        WebXmlParserTest.servletContext.setInitialized(false);
+        jerryServletContext.setInitialized(false);
 
         String name = "";
         Filter filter = Mockito.mock(Filter.class);
-        WebXmlParserTest.servletContext.addFilter(name, filter);
+        jerryServletContext.addFilter(name, filter);
     }
 
     @Test(expected = IllegalStateException.class)
     public void addFilterWithNameAndFilterToInitializedContextTest(){
         String name = "Homer";
         Filter filter = Mockito.mock(Filter.class);
-        WebXmlParserTest.servletContext.addFilter(name, filter);
+        jerryServletContext.addFilter(name, filter);
     }
 
     @Test
     public void createServletTest() throws ServletException {
-        if(WebXmlParserTest.servletContext.createServlet(Mockito.mock(Servlet.class).getClass()) == null){
+        if(jerryServletContext.createServlet(Mockito.mock(Servlet.class).getClass()) == null){
             Assert.fail();
         }
     }
 
     @Test
     public void createFilterTest() throws ServletException {
-        if(WebXmlParserTest.servletContext.createFilter(Mockito.mock(Filter.class).getClass()) == null){
+        if(jerryServletContext.createFilter(Mockito.mock(Filter.class).getClass()) == null){
             Assert.fail();
         }
     }
