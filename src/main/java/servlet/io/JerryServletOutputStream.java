@@ -37,7 +37,9 @@ public class JerryServletOutputStream extends ServletOutputStream {
     @Override
     public void write(int b) throws IOException {
         if(bufferIndex < bufferSize){
-            writeListener.onWritePossible();
+            if(writeListener != null){
+                writeListener.onWritePossible();
+            }
             buffer[bufferIndex++] = (byte) b;
         }
         else{

@@ -7,6 +7,7 @@ import servlet.request.JerryHttpServletRequest;
 import servlet.response.JerryHttpServletResponse;
 
 import javax.servlet.*;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -49,8 +50,13 @@ public class HttpServer extends Thread{
                         RequestHandler handler = urls.get(uri.substring(index + 1, uri.length()));
                         if(handler != null){
                             handler.handle(request, response);
+
+                            if(response.getStatusCode() == -1){
+                                response.setStatusCode(HttpServletResponse.SC_FOUND);
+                            }
+
                         } else{
-                            response.setStatus(404, "NOT FOUND");
+                            response.setStatus(HttpServletResponse.SC_NOT_FOUND, "NOT FOUND");
                         }
 
                         response.flush();

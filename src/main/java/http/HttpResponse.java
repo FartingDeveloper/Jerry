@@ -77,4 +77,8 @@ public class HttpResponse extends HttpMessage{
     public boolean isCommited() {
         return commited;
     }
+
+    public void commit(){
+        commited = true;
+    }
 }

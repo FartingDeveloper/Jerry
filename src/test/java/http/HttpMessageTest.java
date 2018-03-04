@@ -2,8 +2,10 @@ package http;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,8 +15,8 @@ public class HttpMessageTest {
     public static final String[] HEADER_VALUES = {"text/plain", "utf-8", "en-US", "en.wikipedia.org"};
     public static HttpMessage message;
 
-    @Before
-    public void init(){
+    @BeforeClass
+    public static void initClass() throws IOException {
         List<Header> headerList = createList();
         message = new HttpMessage(headerList);
     }

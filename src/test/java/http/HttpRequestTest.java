@@ -25,8 +25,7 @@ public class HttpRequestTest extends HttpMessageTest{
     public static String tmpUri;
 
     @Before
-    public void init(){
-        super.init();
+    public void initObj(){
         StringBuilder builder = new StringBuilder(URI + "?");
         for(int i = 0; i < PARAMS.length; i++){
             builder.append(PARAMS[i][0] + "=" + PARAMS[i][1] + "&");

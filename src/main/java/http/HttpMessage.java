@@ -82,14 +82,4 @@ public class HttpMessage {
     public String getContent(){
         return content;
     }
-
-    public List<Header> getHeaders(String name) {
-        ArrayList<Header> hdrs = new ArrayList<>();
-        for(Header header : headers){
-            if(header.getName().equals(name)){
-                hdrs.add(header);
-            }
-        }
-        return hdrs;
-    }
 }

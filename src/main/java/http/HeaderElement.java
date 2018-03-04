@@ -63,4 +63,20 @@ public class HeaderElement {
         return parameters.get(name);
     }
 
+    @Override
+    public String toString() {
+        StringBuilder result = new StringBuilder();
+        if (value == null) {
+            result.append(name);
+        } else {
+            result.append(name + Syntax.EQUALITY + value);
+        }
+
+        if (parameters.size() != 0) {
+            for (String str : parameters.keySet()) {
+                result.append(Syntax.ELEMENT_PARAMS_SEPARATOR + str + "=" + parameters.get(str));
+            }
+        }
+        return result.toString();
+    }
 }

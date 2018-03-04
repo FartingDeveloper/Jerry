@@ -102,7 +102,7 @@ public class JerryAsyncContext implements AsyncContext {
             }
         }
 
-        servletResponse.commit();
+        servletResponse.getResponse().commit();
 
         completed = true;
     }

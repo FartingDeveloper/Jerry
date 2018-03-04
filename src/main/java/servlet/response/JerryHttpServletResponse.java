@@ -1,9 +1,11 @@
 package servlet.response;
 
 import http.Header;
+import http.HeaderElement;
 import http.HttpResponse;
 
 import javax.servlet.ServletContext;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -67,6 +69,7 @@ public class JerryHttpServletResponse extends JerryServletResponse implements Ht
     @Override
     public void sendRedirect(String location) throws IOException {
         checkCommit();
+        response.setStatusCode(SC_FOUND);
         response.setHeader("Location", location);
         response.flush();
     }
@@ -130,8 +133,9 @@ public class JerryHttpServletResponse extends JerryServletResponse implements Ht
     @Override
     public Collection<String> getHeaders(String name) {
         ArrayList<String> list = new ArrayList<>();
-        for (Header header: response.getHeaders(name)) {
-            list.add(header.getValue());
+        Header header = response.getHeader(name);
+        for(HeaderElement element : header.getElements()){
+                list.add(element.getName());
         }
         return list;
     }

@@ -35,13 +35,24 @@ public class JerryServletResponse implements ServletResponse {
     @Override
     public String getCharacterEncoding() {
         Header header = response.getHeader("Content-Type");
-        HeaderElement element = header.getElements().get(0);
-        return element.getParameterByName("charset");
+        if(header != null){
+            for(HeaderElement element : header.getElements()){
+                String param = element.getParameterByName("charset");
+                if(param != null){
+                    return param;
+                }
+            }
+        }
+        return null;
     }
 
     @Override
     public String getContentType() {
-        return response.getHeader("Content-Type").getValue();
+        Header header = response.getHeader("Content-Type");
+        if(header != null){
+            response.getHeader("Content-Type").getValue();
+        }
+        return null;
     }
 
     @Override
@@ -68,7 +79,12 @@ public class JerryServletResponse implements ServletResponse {
     @Override
     public void setCharacterEncoding(String charset) {
         checkCommit();
-        response.setHeader("Content-Type", response.getHeader("Content-Type").getName() + Syntax.ELEMENT_PARAMS_SEPARATOR + "charset=" + charset);
+        if(response.getHeader("Content-Type") != null){
+            response.setHeader("Content-Type", response.getHeader("Content-Type").getName() + Syntax.ELEMENT_PARAMS_SEPARATOR + "charset=" + charset);
+        }
+        else{
+            response.setHeader("Content-Type", "text/html" + Syntax.ELEMENT_PARAMS_SEPARATOR + "charset=" + charset);
+        }
     }
 
     @Override
