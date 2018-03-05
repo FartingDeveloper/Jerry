@@ -113,11 +113,20 @@ public class JerryServletContext implements ServletContext {
     public Set<String> getResourcePaths(String path) {
         Set<String> paths = new HashSet<>();
 
-        for(String resource : resourcePaths){
-            if(isPartOfDir(path, resource)){
-                paths.add(resource);
-            }
-        }
+//        for(String resource : resourcePaths){
+//            if(isPartOfDir(path, resource)){
+//                int start = resource.indexOf(path);
+//                String tmp = resource.substring(start + path.length(), resource.length());
+//                int end = tmp.indexOf("/");
+//                if(end == -1){
+//                    tmp = resource.substring(start, );
+//                } else{
+//                    tmp = resource.substring(start, );
+//                }
+//
+//                paths.add(tmp);
+//            }
+//        }
 
         if (path.isEmpty()){
             return null;
@@ -125,9 +134,15 @@ public class JerryServletContext implements ServletContext {
         return paths;
     }
 
+    //I DONT KNOW BUT FUCKING REGEX DOESNT WORK, SO I DECIDED TO DO THIS SHIET
     private boolean isPartOfDir(String path, String resource){
-        Pattern pattern = Pattern.compile(contextPath + path + "(\\w+" + Pattern.quote(File.separator) + "| \\w+)");
-        return pattern.matcher(resource).find();
+        resource = resource.replaceAll("\\\\", "\\/");
+        resource = resource.substring(contextPath.length(), resource.length());
+
+        if(resource.contains(path)){
+            return true;
+        }
+        return false;
     }
 
     public URL getResource(String path) throws MalformedURLException {
@@ -169,6 +184,8 @@ public class JerryServletContext implements ServletContext {
         }
 
         for(String p : resourcePaths){
+            int index = p.indexOf(contextName);
+            p = p.substring(index, p.length());
             if(path.equals(p)){
                 try {
                     return new JerryStaticRequestDispatcher(new URL(URL_SCHEME + p));
@@ -388,6 +405,7 @@ public class JerryServletContext implements ServletContext {
         JerryFilterRegistration filterRegistration = filterRegistrations.get(filterName);
         if(filterRegistrations.get(filterName) != null){
             filterRegistrations.get(filterName).setClassName(filter.getClass().getName());
+            filterRegistration.setFilter(filter);
             return filterRegistration;
         }
 
@@ -585,6 +603,10 @@ public class JerryServletContext implements ServletContext {
 
     public void init() throws ClassNotFoundException, InstantiationException, ServletException, IllegalAccessException {
 
+        if(initialized){
+            throw new IllegalStateException();
+        }
+
         for (ServletContextListener contextListener : servletContextListeners){
             contextListener.contextInitialized(new ServletContextEvent(this));
         }
@@ -604,10 +626,6 @@ public class JerryServletContext implements ServletContext {
         for (ServletContextListener contextListener : servletContextListeners){
             contextListener.contextDestroyed(new ServletContextEvent(this));
         }
-    }
-
-    public void setInitialized(boolean initialized){
-        this.initialized = initialized;
     }
 
     private boolean addListenerToSet(EventListener listener){

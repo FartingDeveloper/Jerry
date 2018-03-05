@@ -31,7 +31,17 @@ public class HttpServer extends Thread{
     private Map<String, RequestHandler> urls;
 
     public void init(){
-        urls = createHandlers();
+        try {
+            urls = createHandlers();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (InstantiationException e) {
+            e.printStackTrace();
+        } catch (ServletException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -73,7 +83,7 @@ public class HttpServer extends Thread{
         }
     }
 
-    private Map<String, RequestHandler> createHandlers(){
+    private Map<String, RequestHandler> createHandlers() throws ClassNotFoundException, InstantiationException, ServletException, IllegalAccessException {
         Map<String, RequestHandler> handlers = new LinkedHashMap<>();
 
         for (String contextName : contexts.keySet()){
@@ -99,6 +109,9 @@ public class HttpServer extends Thread{
                     handlers.put(url, handler);
                 }
             }
+
+            servletContext.init();
+
         }
         return handlers;
     }

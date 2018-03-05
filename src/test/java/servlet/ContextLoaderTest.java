@@ -6,6 +6,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import servlet.context.JerryServletContext;
 
+import javax.servlet.ServletException;
 import java.net.URISyntaxException;
 import java.util.Map;
 
@@ -15,7 +16,7 @@ public class ContextLoaderTest {
     public static JerryServletContext jerryServletContext;
 
     @BeforeClass
-    public static void initClass() throws URISyntaxException {
+    public static void initClass() throws URISyntaxException, ClassNotFoundException, InstantiationException, ServletException, IllegalAccessException {
         System.out.println(ContextLoader.class
                 .getClassLoader().getResource("webapps").getPath());
 
@@ -28,6 +29,7 @@ public class ContextLoaderTest {
         contexts = new ContextLoader().load(path);
 
         jerryServletContext = contexts.values().iterator().next();
+        Thread.currentThread().setContextClassLoader(jerryServletContext.getClassLoader());
     }
 
     @Test
