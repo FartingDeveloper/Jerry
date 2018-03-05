@@ -23,7 +23,7 @@ public class WebXmlParserTest {
     public static JerryServletContext servletContext;
 
     @BeforeClass
-    public static void beforeAll() throws IllegalAccessException, InvocationTargetException, InstantiationException, URISyntaxException, NoSuchMethodException, NoSuchFieldException {
+    public static void beforeAll() throws IllegalAccessException, InvocationTargetException, InstantiationException, URISyntaxException, NoSuchMethodException, NoSuchFieldException, ServletException, ClassNotFoundException {
         //we need an outer class object to use the inner object constructor
         //(the inner class object needs to know about its parent object)
         ContextLoader outerObject = new ContextLoader();

@@ -1,45 +1,34 @@
 package servlet;
 
-import loader.ContextLoader;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
-import servlet.context.JerryServletContext;
 
 import javax.servlet.*;
+import java.net.MalformedURLException;
 import java.util.Enumeration;
 
 public class ServletContextTest extends ContextLoaderTest {
 
     @Test
-    public void getContextPathTest(){
-
-    }
-
-    @Test
-    public void getContextTest(){
-
-    }
-
-    @Test
-    public void getMimeTypeTest(){
-
-    }
-
-    @Test
     public void getResourcePathsTest(){
-
+        if(jerryServletContext.getResourcePaths("/").size() == 0){
+            Assert.fail();
+        }
     }
 
     @Test
-    public void getResourceTest(){
-
+    public void getResourceTest() throws MalformedURLException {
+        if(jerryServletContext.getResource("login.jsp") == null){
+            Assert.fail();
+        }
     }
 
     @Test
     public void getResourceAsStreamTest(){
-
+        if(jerryServletContext.getResourceAsStream("login.jsp") == null){
+            Assert.fail();
+        }
     }
 
     @Test
@@ -105,7 +94,8 @@ public class ServletContextTest extends ContextLoaderTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void setInitParameterTest(){
+    public void setInitParameterTest() throws ClassNotFoundException, InstantiationException, ServletException, IllegalAccessException {
+        jerryServletContext.init();
         String name = "Homer";
         String value = "Bart";
         jerryServletContext.setInitParameter(name, value);
@@ -179,8 +169,6 @@ public class ServletContextTest extends ContextLoaderTest {
 
     @Test
     public void addServletWithNameAndClassNameTest(){
-        jerryServletContext.setInitialized(false);
-
         String name = "Homer";
         String servletClass = "Homer.class";
         ServletRegistration servletRegistration = jerryServletContext.addServlet(name, servletClass);
@@ -191,8 +179,6 @@ public class ServletContextTest extends ContextLoaderTest {
 
     @Test
     public void addServletWithRepeatedNameAndClassNameTest(){
-        jerryServletContext.setInitialized(false);
-
         String name = "Homer";
         String servletClass = "Homer.class";
         jerryServletContext.addServlet(name, servletClass);
@@ -203,8 +189,6 @@ public class ServletContextTest extends ContextLoaderTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void addServletWithNullNameAndClassNameTest(){
-        jerryServletContext.setInitialized(false);
-
         String name = null;
         String servletClass = "Homer.class";
         jerryServletContext.addServlet(name, servletClass);
@@ -228,8 +212,6 @@ public class ServletContextTest extends ContextLoaderTest {
 
     @Test
     public void addServletWithNameAndServletTest(){
-        jerryServletContext.setInitialized(false);
-
         String name = "Homer";
         Servlet servlet = Mockito.mock(Servlet.class);
         ServletRegistration servletRegistration = jerryServletContext.addServlet(name, servlet);
@@ -240,8 +222,6 @@ public class ServletContextTest extends ContextLoaderTest {
 
     @Test
     public void addServletWithRepeatedNameAndServletTest(){
-        jerryServletContext.setInitialized(false);
-
         String name = "Homer";
         Servlet servlet = Mockito.mock(Servlet.class);
         jerryServletContext.addServlet(name, servlet);
@@ -252,8 +232,6 @@ public class ServletContextTest extends ContextLoaderTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void addServletWithNullNameAndServletTest(){
-        jerryServletContext.setInitialized(false);
-
         String name = null;
         Servlet servlet = null;
         jerryServletContext.addServlet(name, servlet);
@@ -261,8 +239,6 @@ public class ServletContextTest extends ContextLoaderTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void addServletWithEmptyNameAnServletTest(){
-        jerryServletContext.setInitialized(false);
-
         String name = "";
         Servlet servlet = null;
         jerryServletContext.addServlet(name, servlet);
@@ -270,8 +246,6 @@ public class ServletContextTest extends ContextLoaderTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void addServletWithNameAndSingleThreadModelServletTest(){
-        jerryServletContext.setInitialized(false);
-
         String name = "Homer";
         Servlet servlet = Mockito.mock(Servlet.class, Mockito.withSettings().extraInterfaces(SingleThreadModel.class));
 
@@ -287,8 +261,6 @@ public class ServletContextTest extends ContextLoaderTest {
 
     @Test
     public void addServletWithNameAndClassTest(){
-        jerryServletContext.setInitialized(false);
-
         String name = "Homer";
         Class<? extends Servlet> servletClass = Mockito.mock(Servlet.class).getClass();
         jerryServletContext.addServlet(name, servletClass);
@@ -299,8 +271,6 @@ public class ServletContextTest extends ContextLoaderTest {
 
     @Test
     public void addServletWithRepeatedNameAndClassTest(){
-        jerryServletContext.setInitialized(false);
-
         String name = "Homer";
         Class<? extends Servlet> servletClass = Mockito.mock(Servlet.class).getClass();
         jerryServletContext.addServlet(name, servletClass);
@@ -311,8 +281,6 @@ public class ServletContextTest extends ContextLoaderTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void addServletWithNullNameAndClassTest(){
-        jerryServletContext.setInitialized(false);
-
         String name = null;
         Class<? extends Servlet> servletClass = Mockito.mock(Servlet.class).getClass();
         jerryServletContext.addServlet(name, servletClass);
@@ -320,15 +288,14 @@ public class ServletContextTest extends ContextLoaderTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void addServletWithEmptyNameAndClassTest(){
-        jerryServletContext.setInitialized(false);
-
         String name = "";
         Class<? extends Servlet> servletClass = Mockito.mock(Servlet.class).getClass();
         jerryServletContext.addServlet(name, servletClass);
     }
 
     @Test(expected = IllegalStateException.class)
-    public void addServletWithNameAndClassToInitializedContextTest(){
+    public void addServletWithNameAndClassToInitializedContextTest() throws ClassNotFoundException, InstantiationException, ServletException, IllegalAccessException {
+        jerryServletContext.setInitialized(true);
         String name = "Homer";
         Class<? extends Servlet> servletClass = Mockito.mock(Servlet.class).getClass();
         jerryServletContext.addServlet(name, servletClass);
@@ -336,8 +303,6 @@ public class ServletContextTest extends ContextLoaderTest {
 
     @Test
     public void addFilterWithNameAndClassNameTest(){
-        jerryServletContext.setInitialized(false);
-
         String name = "Homer";
         String filterClass = "Homer.class";
         FilterRegistration filterRegistration = jerryServletContext.addFilter(name, filterClass);
@@ -348,8 +313,6 @@ public class ServletContextTest extends ContextLoaderTest {
 
     @Test
     public void addFilterWithRepeatedNameAndClassNameTest(){
-        jerryServletContext.setInitialized(false);
-
         String name = "Homer";
         String filterClass = "Homer.class";
         jerryServletContext.addFilter(name, filterClass);
@@ -360,8 +323,6 @@ public class ServletContextTest extends ContextLoaderTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void addFilterWithNullNameAndClassNameTest(){
-        jerryServletContext.setInitialized(false);
-
         String name = null;
         String filterClass = "Homer.class";
         jerryServletContext.addFilter(name, filterClass);
@@ -369,8 +330,6 @@ public class ServletContextTest extends ContextLoaderTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void addFilterWithEmptyNameAndClassNameTest(){
-        jerryServletContext.setInitialized(false);
-
         String name = "";
         String filterClass = "Homer.class";
         jerryServletContext.addFilter(name, filterClass);
@@ -385,8 +344,6 @@ public class ServletContextTest extends ContextLoaderTest {
 
     @Test
     public void addFilterWithNameAndFilterTest(){
-        jerryServletContext.setInitialized(false);
-
         String name = "Homer";
         Filter filter = Mockito.mock(Filter.class);
         FilterRegistration filterRegistration = jerryServletContext.addFilter(name, filter);
@@ -397,8 +354,6 @@ public class ServletContextTest extends ContextLoaderTest {
 
     @Test
     public void addFilterWithRepeatedNameAndFilterTest(){
-        jerryServletContext.setInitialized(false);
-
         String name = "Homer";
         Filter filter = Mockito.mock(Filter.class);
         jerryServletContext.addFilter(name, filter);
@@ -409,8 +364,6 @@ public class ServletContextTest extends ContextLoaderTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void addFilterWithNullNameAndFilterTest(){
-        jerryServletContext.setInitialized(false);
-
         String name = null;
         Filter filter = Mockito.mock(Filter.class);
         jerryServletContext.addFilter(name, filter);
@@ -418,15 +371,14 @@ public class ServletContextTest extends ContextLoaderTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void addFilterWithEmptyNameAndFilterTest(){
-        jerryServletContext.setInitialized(false);
-
         String name = "";
         Filter filter = Mockito.mock(Filter.class);
         jerryServletContext.addFilter(name, filter);
     }
 
     @Test(expected = IllegalStateException.class)
-    public void addFilterWithNameAndFilterToInitializedContextTest(){
+    public void addFilterWithNameAndFilterToInitializedContextTest() throws ClassNotFoundException, InstantiationException, ServletException, IllegalAccessException {
+        jerryServletContext.setInitialized(true);
         String name = "Homer";
         Filter filter = Mockito.mock(Filter.class);
         jerryServletContext.addFilter(name, filter);

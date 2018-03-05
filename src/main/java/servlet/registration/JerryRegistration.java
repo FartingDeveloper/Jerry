@@ -1,15 +1,18 @@
 package servlet.registration;
 
 import javax.servlet.Registration;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class JerryRegistration implements Registration {
+public class JerryRegistration implements Registration.Dynamic {
 
     protected String name;
     protected String className;
     protected Map<String, String> initParameters;
+    protected boolean async;
 
     protected boolean initialized;
 
@@ -65,10 +68,6 @@ public class JerryRegistration implements Registration {
         return initParameters;
     }
 
-    public void setInitialized(boolean init){
-        initialized = init;
-    }
-
     private void checkInitParams(Object... obj){
 
         for (int i = 0; i < obj.length; i++){
@@ -85,5 +84,30 @@ public class JerryRegistration implements Registration {
         }
 
         if(initialized) throw new IllegalStateException();
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setClassName(String className) {
+        this.className = className;
+    }
+
+    @Override
+    public void setAsyncSupported(boolean isAsyncSupported) {
+        async = isAsyncSupported;
+    }
+
+    public boolean isAsync() {
+        return async;
+    }
+
+    public boolean isInitialized() {
+        return initialized;
+    }
+
+    public void setInitialized(boolean initialized) {
+        this.initialized = initialized;
     }
 }

@@ -4,10 +4,10 @@ import http.HttpResponse;
 import org.apache.logging.log4j.LogManager;
 import servlet.JerryEnumeration;
 import servlet.JerryHttpSession;
+import servlet.registration.JerryDynamicRequestDispatcher;
 import servlet.registration.JerryFilterRegistration;
-import servlet.registration.JerryFilterRegistrationDynamic;
 import servlet.registration.JerryServletRegistration;
-import servlet.registration.JerryServletRegistrationDynamic;
+import servlet.registration.JerryStaticRequestDispatcher;
 
 import javax.activation.MimeType;
 import javax.servlet.*;
@@ -20,13 +20,17 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class JerryServletContext implements ServletContext {
 
+    private static final String URL_SCHEME = "file://";
+
     private boolean initialized;
 
     private String contextPath;
+    private String contextName;
 
     private Map<String, String> contextParameters;
 
@@ -69,7 +73,6 @@ public class JerryServletContext implements ServletContext {
         this.contextParameters = new HashMap<>();
         this.servletRegistrations = new HashMap<>();
         this.filterRegistrations = new HashMap<>();
-        this.resourcePaths = new HashSet<>();
         this.mimeTypes = new HashMap<>();
         this.sessions = new HashMap<>();
         this.sessionTimeout = 43200;
@@ -111,7 +114,7 @@ public class JerryServletContext implements ServletContext {
         Set<String> paths = new HashSet<>();
 
         for(String resource : resourcePaths){
-            if(comparePaths(path, resource)){
+            if(isPartOfDir(path, resource)){
                 paths.add(resource);
             }
         }
@@ -122,18 +125,23 @@ public class JerryServletContext implements ServletContext {
         return paths;
     }
 
+    private boolean isPartOfDir(String path, String resource){
+        Pattern pattern = Pattern.compile(contextPath + path + "(\\w+" + Pattern.quote(File.separator) + "| \\w+)");
+        return pattern.matcher(resource).find();
+    }
+
     public URL getResource(String path) throws MalformedURLException {
         URL url = null;
         for(String resource : resourcePaths){
-            if (comparePaths(path, resource)){
-                url = new URL(resource);
+            if (comparePath(path, resource)){
+                url = new URL(URL_SCHEME + resource);
             }
         }
         return url;
     }
 
-    private boolean comparePaths(String path, String resource){
-        Pattern pattern = Pattern.compile(path + "(\\w*" + Pattern.quote(File.separator) + "| \\w*$)");
+    private boolean comparePath(String path, String resource){
+        Pattern pattern = Pattern.compile(path + "$");
         return pattern.matcher(resource).find();
     }
 
@@ -154,15 +162,33 @@ public class JerryServletContext implements ServletContext {
         for (JerryServletRegistration servletRegistration : servletRegistrations.values()){
             for (String p : servletRegistration.getMappings()){
                 if(path.equals(p)){
-                    return servletRegistration.getJerryRequestDispatcher(this);
+                    Servlet servlet = servletRegistration.getServlet();
+                    return new JerryDynamicRequestDispatcher(servlet);
                 }
             }
         }
+
+        for(String p : resourcePaths){
+            if(path.equals(p)){
+                try {
+                    return new JerryStaticRequestDispatcher(new URL(URL_SCHEME + p));
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
         return null;
     }
 
     public RequestDispatcher getNamedDispatcher(String name) {
-        return servletRegistrations.get(name).getJerryRequestDispatcher(this);
+        for (JerryServletRegistration servletRegistration : servletRegistrations.values()){
+            if(servletRegistration.getName().equals(name)){
+                Servlet servlet = servletRegistration.getServlet();
+                return new JerryDynamicRequestDispatcher(servlet);
+            }
+        }
+        return null;
     }
 
     public Servlet getServlet(String name) throws ServletException {
@@ -273,32 +299,45 @@ public class JerryServletContext implements ServletContext {
         attributes.remove(name);
     }
 
+    public void setContextName(String contextName) {
+        this.contextName = contextName;
+    }
+
     public String getServletContextName() {
-        return null;
+        return contextName;
     }
 
     public ServletRegistration.Dynamic addServlet(String servletName, String className) {
         check(servletName);
 
-        if(servletRegistrations.get(servletName) != null) return null;
+        JerryServletRegistration servletRegistration;
+        servletRegistration = servletRegistrations.get(servletName);
+        if(servletRegistration != null){
+            servletRegistration.setClassName(className);
+            return servletRegistration;
+        }
 
-        JerryServletRegistrationDynamic servletRegistrationDynamic = new JerryServletRegistrationDynamic(servletName, className);
-        servletRegistrations.put(servletName, servletRegistrationDynamic);
-        return servletRegistrationDynamic;
+        servletRegistration = new JerryServletRegistration(servletName, className);
+
+        servletRegistrations.put(servletName, servletRegistration);
+        return servletRegistration;
     }
 
     public ServletRegistration.Dynamic addServlet(String servletName, Servlet servlet) {
         check(servletName);
 
-        if(servlet instanceof SingleThreadModel){
-            throw new IllegalArgumentException();
+        JerryServletRegistration servletRegistration;
+        servletRegistration = servletRegistrations.get(servletName);
+        if(servletRegistration != null){
+            servletRegistration.setClassName(servlet.getClass().getName());
+            servletRegistration.setServlet(servlet);
+            return servletRegistration;
         }
 
-        if(servletRegistrations.get(servletName) != null) return null;
+        servletRegistration = new JerryServletRegistration(servletName, servlet.getClass().getName());
 
-        JerryServletRegistrationDynamic servletRegistrationDynamic = new JerryServletRegistrationDynamic(servletName, servlet);
-        servletRegistrations.put(servletName, servletRegistrationDynamic);
-        return servletRegistrationDynamic;
+        servletRegistrations.put(servletName, servletRegistration);
+        return servletRegistration;
     }
 
     public ServletRegistration.Dynamic addServlet(String servletName, Class<? extends Servlet> servletClass) {
@@ -332,15 +371,30 @@ public class JerryServletContext implements ServletContext {
     public FilterRegistration.Dynamic addFilter(String filterName, String className) {
         check(filterName);
 
-        if(filterRegistrations.get(filterName) != null) return null;
+        JerryFilterRegistration filterRegistration = filterRegistrations.get(filterName);
+        if(filterRegistrations.get(filterName) != null){
+            filterRegistrations.get(filterName).setClassName(className);
+            return filterRegistration;
+        }
 
-        JerryFilterRegistrationDynamic filterRegistrationDynamic = new JerryFilterRegistrationDynamic(filterName, className);
-        filterRegistrations.put(filterName, filterRegistrationDynamic);
-        return filterRegistrationDynamic;
+        filterRegistration = new JerryFilterRegistration(filterName, className);
+        filterRegistrations.put(filterName, filterRegistration);
+        return filterRegistration;
     }
 
     public FilterRegistration.Dynamic addFilter(String filterName, Filter filter) {
-        return addFilter(filterName, filter.getClass().getName());
+        check(filterName);
+
+        JerryFilterRegistration filterRegistration = filterRegistrations.get(filterName);
+        if(filterRegistrations.get(filterName) != null){
+            filterRegistrations.get(filterName).setClassName(filter.getClass().getName());
+            return filterRegistration;
+        }
+
+        filterRegistration = new JerryFilterRegistration(filterName, filter.getClass().getName());
+        filterRegistration.setFilter(filter);
+        filterRegistrations.put(filterName, filterRegistration);
+        return filterRegistration;
     }
 
     public FilterRegistration.Dynamic addFilter(String filterName, Class<? extends Filter> filterClass) {
@@ -529,24 +583,18 @@ public class JerryServletContext implements ServletContext {
         if(initialized) throw new IllegalStateException();
     }
 
-    private void sortListeners(Set<EventListener> listeners){
-        for (EventListener listener : listeners){
-            addListenerToSet(listener);
-        }
-    }
-
-    public void init(){
+    public void init() throws ClassNotFoundException, InstantiationException, ServletException, IllegalAccessException {
 
         for (ServletContextListener contextListener : servletContextListeners){
             contextListener.contextInitialized(new ServletContextEvent(this));
         }
 
         for(JerryServletRegistration servletRegistration : servletRegistrations.values()){
-            servletRegistration.setInitialized(true);
+            servletRegistration.init(this);
         }
 
         for(JerryFilterRegistration filterRegistration : filterRegistrations.values()){
-            filterRegistration.setInitialized(true);
+            filterRegistration.init(this);
         }
 
         initialized = true;

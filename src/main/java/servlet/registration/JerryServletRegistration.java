@@ -2,15 +2,17 @@ package servlet.registration;
 
 import org.apache.logging.log4j.LogManager;
 import servlet.JerryEnumeration;
+import servlet.context.JerryServletContext;
 
 import javax.servlet.*;
 import java.io.IOException;
 import java.util.*;
 
-public class JerryServletRegistration extends JerryRegistration implements ServletRegistration {
+public class JerryServletRegistration extends JerryRegistration implements ServletRegistration.Dynamic {
 
-    protected String role;
-    protected int loadOnStartup;
+    private Servlet servlet;
+    private String role;
+    private int loadOnStartup;
 
     private Set<String> mappings;
     protected JerryServletRegistration.JerryServletConfig config;
@@ -21,17 +23,6 @@ public class JerryServletRegistration extends JerryRegistration implements Servl
         super(servletName, servletClassName);
         mappings = new LinkedHashSet<>();
         loadOnStartup = -1;
-    }
-
-    public JerryServletRegistration(String servletName, String servletClassName, Map<String, String> initParameters){
-        super(servletName, servletClassName, initParameters);
-        mappings = new LinkedHashSet<>();
-        loadOnStartup = -1;
-    }
-
-    public JerryServletRegistration(String servletName, String servletClassName, Map<String, String> initParameters, Set<String> mappings){
-        this(servletName, servletClassName, initParameters);
-        this.mappings = mappings;
     }
 
     @Override
@@ -61,27 +52,50 @@ public class JerryServletRegistration extends JerryRegistration implements Servl
         return config;
     }
 
-    public JerryServletConfig.JerryRequestDispatcher getJerryRequestDispatcher(ServletContext context){
-        JerryServletConfig config = getJerryServletConfig(context);
-        JerryServletConfig.JerryRequestDispatcher requestDispatcher = null;
-        try {
-            requestDispatcher = config.getJerryRequestDispatcher();
-        } catch (ClassNotFoundException e) {
-            logger.error("Class isn't found: " + className);
-            throw new RuntimeException("Class isn't found");
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (ServletException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
-        return requestDispatcher;
+    @Override
+    public void setLoadOnStartup(int loadOnStartup) {
+
     }
 
-    protected class JerryServletConfig implements ServletConfig{
+    @Override
+    public Set<String> setServletSecurity(ServletSecurityElement constraint) {
+        return null;
+    }
 
-        private JerryRequestDispatcher requestDispatcher;
+    @Override
+    public void setMultipartConfig(MultipartConfigElement multipartConfig) {
+
+    }
+
+    @Override
+    public void setRunAsRole(String roleName) {
+
+    }
+
+    public Servlet getServlet() {
+        return servlet;
+    }
+
+    public void setServlet(Servlet servlet) {
+        this.servlet = servlet;
+    }
+
+    public void init(ServletContext context) throws InstantiationException, ClassNotFoundException, ServletException, IllegalAccessException {
+        if(initialized){
+            throw new IllegalStateException();
+        }
+
+        initialized = true;
+
+        if(servlet == null){
+            Class<Servlet> clazz = (Class<Servlet>) context.getClassLoader().loadClass(className);
+            servlet = clazz.newInstance();
+        }
+
+        servlet.init(new JerryServletConfig(context));
+    }
+
+    private class JerryServletConfig implements ServletConfig{
 
         private ServletContext context;
 
@@ -107,46 +121,6 @@ public class JerryServletRegistration extends JerryRegistration implements Servl
         @Override
         public Enumeration<String> getInitParameterNames() {
             return new JerryEnumeration<>(initParameters.keySet().iterator());
-        }
-
-        public JerryRequestDispatcher getJerryRequestDispatcher() throws ClassNotFoundException, InstantiationException, ServletException, IllegalAccessException {
-            if(requestDispatcher == null){
-                requestDispatcher = new JerryRequestDispatcher();
-            }
-            return requestDispatcher;
-        }
-
-        protected class JerryRequestDispatcher implements RequestDispatcher {
-
-            private Servlet servlet;
-
-            public JerryRequestDispatcher() throws ClassNotFoundException, IllegalAccessException, InstantiationException, ServletException {
-                ClassLoader classLoader = context.getClassLoader();
-                Class<Servlet> servletClass = (Class<Servlet>) classLoader.loadClass(className);
-                servlet = servletClass.newInstance();
-                servlet.init(JerryServletConfig.this);
-            }
-
-            public JerryRequestDispatcher(Servlet servlet){
-                this.servlet = servlet;
-            }
-
-            @Override
-            public void forward(ServletRequest request, ServletResponse response) throws ServletException, IOException {
-                if(response.isCommitted()){
-                    throw new IllegalStateException();
-                }
-                servlet.service(request, response);
-            }
-
-            @Override
-            public void include(ServletRequest request, ServletResponse response) throws ServletException, IOException {
-                servlet.service(request, response);
-            }
-
-            public Servlet getServlet() {
-                return servlet;
-            }
         }
     }
 }

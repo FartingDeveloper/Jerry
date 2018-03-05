@@ -3,7 +3,6 @@ package loader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.util.KeyValuePair;
-import org.omg.CORBA.NameValuePair;
 import org.springframework.beans.factory.BeanCreationException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -11,7 +10,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import servlet.registration.JerryFilterRegistration;
 import servlet.context.JerryServletContext;
-import servlet.registration.JerryServletRegistrationDynamic;
+import servlet.registration.JerryServletRegistration;
 
 import javax.servlet.DispatcherType;
 import javax.servlet.ServletSecurityElement;
@@ -19,7 +18,6 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
-import java.lang.management.ManagementFactory;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -53,6 +51,8 @@ public class ContextLoader implements Loader<Map<String, JerryServletContext>> {
         for (File file : webapps.listFiles()){
             if(! isWar(file)){
                 JerryServletContext context = createContext(file);
+                context.setContextName(file.getName());
+                context.setContextPath(file.getPath());
                 contexts.put(file.getName(), context);
             }
         }
@@ -200,7 +200,6 @@ public class ContextLoader implements Loader<Map<String, JerryServletContext>> {
         public JerryServletContext parseWebXml(File file){
 
             servletContext = new JerryServletContext(contexts, resources, classLoader);
-            servletContext.setContextPath(file.getName());
 
             try {
                 DocumentBuilder documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
@@ -298,7 +297,8 @@ public class ContextLoader implements Loader<Map<String, JerryServletContext>> {
                 }
             }
 
-            JerryFilterRegistration jerryFilterRegistration = new JerryFilterRegistration(filterName, filterClass, initParams);
+            JerryFilterRegistration jerryFilterRegistration = new JerryFilterRegistration(filterName, filterClass);
+            jerryFilterRegistration.setInitParameters(initParams);
 
             servletContext.addFilterRegistration(jerryFilterRegistration);
         }
@@ -391,7 +391,7 @@ public class ContextLoader implements Loader<Map<String, JerryServletContext>> {
                 }
             }
 
-            JerryServletRegistrationDynamic jerryServletRegistration = new JerryServletRegistrationDynamic(servletName, servletClass);
+            JerryServletRegistration jerryServletRegistration = new JerryServletRegistration(servletName, servletClass);
             jerryServletRegistration.setInitParameters(initParams);
             jerryServletRegistration.setLoadOnStartup(loadOnStartup);
             jerryServletRegistration.setRunAsRole(role);

@@ -2,28 +2,20 @@ package servlet.registration;
 
 import servlet.JerryEnumeration;
 
-import javax.servlet.DispatcherType;
-import javax.servlet.FilterConfig;
-import javax.servlet.FilterRegistration;
-import javax.servlet.ServletContext;
+import javax.servlet.*;
 import java.util.*;
 
-public class JerryFilterRegistration extends JerryRegistration implements FilterRegistration {
+public class JerryFilterRegistration extends JerryRegistration implements FilterRegistration.Dynamic {
 
+    private Filter filter;
     private Set<String> mappings;
     private Set<String> servletNameMappings;
     private Map<Set<String>, EnumSet<DispatcherType>> dispatcherTypes;
-    private JerryFilterRegistration.JerryFilterConfig config;
 
     public JerryFilterRegistration(String name, String className) {
         super(name, className);
-        mappings = new LinkedHashSet<>();
-        servletNameMappings = new LinkedHashSet<>();
-        dispatcherTypes = new LinkedHashMap<>();
-    }
 
-    public JerryFilterRegistration(String name, String className, Map<String, String> initParameters) {
-        super(name, className, initParameters);
+
         mappings = new LinkedHashSet<>();
         servletNameMappings = new LinkedHashSet<>();
         dispatcherTypes = new LinkedHashMap<>();
@@ -67,13 +59,6 @@ public class JerryFilterRegistration extends JerryRegistration implements Filter
         return null;
     }
 
-    public JerryFilterRegistration.JerryFilterConfig getFilterConfig(ServletContext context){
-        if(config == null){
-            config =  new JerryFilterRegistration.JerryFilterConfig(context);
-        }
-        return config;
-    }
-
     private void add(Set<String> set, EnumSet<DispatcherType> dispatcherTypes, boolean isMatchAfter, String... urls){
         check(urls);
 
@@ -84,6 +69,29 @@ public class JerryFilterRegistration extends JerryRegistration implements Filter
 
         set.addAll(tmp);
         this.dispatcherTypes.put(set, dispatcherTypes);
+    }
+
+    public Filter getFilter() {
+        return filter;
+    }
+
+    public void setFilter(Filter filter) {
+        this.filter = filter;
+    }
+
+    public void init(ServletContext context) throws InstantiationException, ClassNotFoundException, ServletException, IllegalAccessException {
+        if(initialized){
+            throw new IllegalStateException();
+        }
+
+        initialized = true;
+
+        if(filter == null){
+            Class<Filter> clazz = (Class<Filter>) context.getClassLoader().loadClass(className);
+            filter = clazz.newInstance();
+        }
+
+        filter.init(new JerryFilterConfig(context));
     }
 
     private class JerryFilterConfig implements FilterConfig {
