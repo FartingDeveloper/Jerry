@@ -14,8 +14,6 @@ public class JerryFilterRegistration extends JerryRegistration implements Filter
 
     public JerryFilterRegistration(String name, String className) {
         super(name, className);
-
-
         mappings = new LinkedHashSet<>();
         servletNameMappings = new LinkedHashSet<>();
         dispatcherTypes = new LinkedHashMap<>();

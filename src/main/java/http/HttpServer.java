@@ -3,6 +3,9 @@ package http;
 import org.springframework.beans.factory.annotation.Autowired;
 import servlet.JerryHttpSession;
 import servlet.context.JerryServletContext;
+import servlet.registration.JerryFilterChain;
+import servlet.registration.JerryFilterRegistration;
+import servlet.registration.JerryServletRegistration;
 import servlet.request.JerryHttpServletRequest;
 import servlet.response.JerryHttpServletResponse;
 
@@ -12,9 +15,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.time.LocalTime;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 
 public class HttpServer extends Thread{
@@ -28,11 +29,11 @@ public class HttpServer extends Thread{
     @Autowired
     private Map<String, JerryServletContext> contexts;
 
-    private Map<String, RequestHandler> urls;
+    private Map<String, RequestHandler> services;
 
     public void init(){
         try {
-            urls = createHandlers();
+            services = createHandlers();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         } catch (InstantiationException e) {
@@ -55,9 +56,8 @@ public class HttpServer extends Thread{
                         HttpResponse response = new HttpResponse(socket.getOutputStream(), request.getRequestLine());
 
                         String uri = request.getRequestLine().getUri();
-                        int index = uri.indexOf("/");
 
-                        RequestHandler handler = urls.get(uri.substring(index + 1, uri.length()));
+                        RequestHandler handler = services.get(uri);
                         if(handler != null){
                             handler.handle(request, response);
 
@@ -90,22 +90,22 @@ public class HttpServer extends Thread{
 
             JerryServletContext servletContext = contexts.get(contextName);
 
-            Set<ServletRequestListener> listeners = servletContext.getRequestListeners();
-
-            Set<String> filterNames = servletContext.getFilterRegistrations().keySet();
-            for (final String filterName : filterNames){
-                FilterRegistration filterRegistration = servletContext.getFilterRegistration(filterName);
-                for (final String url : filterRegistration.getUrlPatternMappings()){
-                    RequestHandler handler = createHandler(servletContext, listeners, url);
-                    handlers.put(url, handler);
-                }
-            }
-
             Set<String> servletNames = servletContext.getServletRegistrations().keySet();
             for (final String servletName : servletNames){
-                ServletRegistration servletRegistration = servletContext.getServletRegistration(servletName);
+                JerryServletRegistration servletRegistration = (JerryServletRegistration) servletContext.getServletRegistration(servletName);
                 for (final String url : servletRegistration.getMappings()){
-                    RequestHandler handler = createHandler(servletContext, listeners, url);
+
+                    List<Filter> filters = new LinkedList<>();
+                    Map<String, JerryFilterRegistration> filterRegistrations = (Map<String, JerryFilterRegistration>) servletContext.getFilterRegistrations();
+                    for(JerryFilterRegistration filterRegistration : filterRegistrations.values()){
+                        for (String mapping : filterRegistration.getUrlPatternMappings()){
+                            if(url.contains(mapping)){
+                                filters.add(filterRegistration.getFilter());
+                            }
+                        }
+                    }
+
+                    RequestHandler handler = createHandler(servletContext, servletRegistration.getServlet(), filters);
                     handlers.put(url, handler);
                 }
             }
@@ -116,7 +116,7 @@ public class HttpServer extends Thread{
         return handlers;
     }
 
-    private RequestHandler createHandler(JerryServletContext servletContext, Set<ServletRequestListener> listeners, String url){
+    private RequestHandler createHandler(JerryServletContext servletContext, Servlet servlet, List<Filter> filters){
         return (HttpRequest request, HttpResponse response)->{
             Thread.currentThread().setContextClassLoader(servletContext.getClassLoader());
 
@@ -141,12 +141,13 @@ public class HttpServer extends Thread{
 
             servletRequest.setSession(session);
 
-            for (ServletRequestListener listener : listeners){
+            for (ServletRequestListener listener : servletContext.getRequestListeners()){
                 listener.requestInitialized(new ServletRequestEvent(servletContext, servletRequest));
             }
 
             try {
-                servletContext.getRequestDispatcher(url).forward(servletRequest, servletResponse);
+               new JerryFilterChain(servlet, filters).doFilter(servletRequest, servletResponse);
+
                 servletResponse.flushBuffer();
             } catch (ServletException e) {
                 e.printStackTrace();
@@ -154,7 +155,7 @@ public class HttpServer extends Thread{
                 e.printStackTrace();
             }
 
-            for (ServletRequestListener listener : listeners){
+            for (ServletRequestListener listener : servletContext.getRequestListeners()){
                 listener.requestDestroyed(new ServletRequestEvent(servletContext, servletRequest));
             }
         };
