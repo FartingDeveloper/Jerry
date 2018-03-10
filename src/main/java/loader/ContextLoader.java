@@ -31,6 +31,7 @@ public class ContextLoader implements Loader<Map<String, JerryServletContext>> {
     private static final String WEB_XML = "web.xml";
     private static final String LIB = "lib";
     private static final String CLASSES = "classes";
+    private static final String WEBAPPS = "webapps";
 
     private Map<String, JerryServletContext> contexts = new HashMap<>();
     private ClassLoader classLoader;
@@ -44,15 +45,14 @@ public class ContextLoader implements Loader<Map<String, JerryServletContext>> {
         logger.debug("Loading contexts.");
         clear();
 
-        unzipWars(path);
+        unzipWars(path + File.separator + WEBAPPS);
 
-        File webapps = new File(path);
+        File webapps = new File(path + File.separator + WEBAPPS);
 
         for (File file : webapps.listFiles()){
             if(! isWar(file)){
                 JerryServletContext context = createContext(file);
                 context.setContextName(file.getName());
-                context.setContextPath(file.getPath());
                 contexts.put(file.getName(), context);
             }
         }
@@ -67,13 +67,13 @@ public class ContextLoader implements Loader<Map<String, JerryServletContext>> {
     private JerryServletContext createContext(File file){
         logger.debug("Creating context:" + file.getName());
 
-        File jars = new File(file.getAbsolutePath() + File.separator + WEB_INF + File.separator + LIB);
-        File classes = new File(file.getAbsolutePath() + File.separator + WEB_INF + File.separator + CLASSES);
+        File jars = new File(file.getPath() + File.separator + WEB_INF + File.separator + LIB);
+        File classes = new File(file.getPath() + File.separator + WEB_INF + File.separator + CLASSES);
         classLoader = loadClasses(jars, classes);
 
         resources = loadResources(file);
 
-        File webXml = new File(file.getAbsolutePath() + File.separator + WEB_INF + File.separator + WEB_XML);
+        File webXml = new File(file.getPath() + File.separator + WEB_INF + File.separator + WEB_XML);
         logger.debug("Parsing web.xml from:" + file.getName());
 
         return parser.parseWebXml(webXml);
@@ -85,7 +85,8 @@ public class ContextLoader implements Loader<Map<String, JerryServletContext>> {
             if (fileEntry.isDirectory()) {
                res.addAll(loadResources(fileEntry));
             } else {
-                res.add(fileEntry.getPath());
+                String resource = fileEntry.toURI().toString();
+                res.add(resource);
             }
         }
         return res;
@@ -99,10 +100,10 @@ public class ContextLoader implements Loader<Map<String, JerryServletContext>> {
 
         try {
             URL[] urls = new URL[files.length + 1];
-            urls[size - 1] = classes.toURI().toURL();
+            urls[size - 1] = classes.getAbsoluteFile().toURI().toURL();
 
             for(int i = 0; i < size - 1; i++){
-                urls[i] = files[i].toURI().toURL();
+                urls[i] = files[i].getAbsoluteFile().toURI().toURL();
             }
 
             loader = new URLClassLoader(urls, this.getClass().getClassLoader());

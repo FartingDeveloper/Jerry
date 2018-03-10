@@ -13,7 +13,7 @@ public class JerryHttpSession implements HttpSession {
 
     private String id;
     private long creationTime;
-    private long lastAccesedTime;
+    private long lastAccessedTime;
     private int invalidateTime;
     private boolean invalidate;
     private boolean status;
@@ -44,7 +44,7 @@ public class JerryHttpSession implements HttpSession {
 
     @Override
     public long getLastAccessedTime() {
-        return lastAccesedTime;
+        return lastAccessedTime;
     }
 
     @Override
@@ -145,8 +145,8 @@ public class JerryHttpSession implements HttpSession {
         return status;
     }
 
-    public void setLastAccesedTime(long lastAccesedTime) {
-        this.lastAccesedTime = lastAccesedTime;
+    public void setLastAccessedTime(long lastAccessedTime) {
+        this.lastAccessedTime = lastAccessedTime;
     }
 
     public void setId(String id) {

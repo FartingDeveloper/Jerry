@@ -18,14 +18,14 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class JerryServletContext implements ServletContext {
-
-    private static final String URL_SCHEME = "file://";
 
     private boolean initialized;
 
@@ -69,7 +69,7 @@ public class JerryServletContext implements ServletContext {
         this.resourcePaths = resourcePaths;
         this.classLoader = classLoader;
 
-        this.contextPath = "";
+        this.contextPath = "/";
         this.contextParameters = new HashMap<>();
         this.servletRegistrations = new HashMap<>();
         this.filterRegistrations = new HashMap<>();
@@ -113,20 +113,21 @@ public class JerryServletContext implements ServletContext {
     public Set<String> getResourcePaths(String path) {
         Set<String> paths = new HashSet<>();
 
-//        for(String resource : resourcePaths){
-//            if(isPartOfDir(path, resource)){
-//                int start = resource.indexOf(path);
-//                String tmp = resource.substring(start + path.length(), resource.length());
-//                int end = tmp.indexOf("/");
-//                if(end == -1){
-//                    tmp = resource.substring(start, );
-//                } else{
-//                    tmp = resource.substring(start, );
-//                }
-//
-//                paths.add(tmp);
-//            }
-//        }
+        path = contextName + path;
+
+        for(String resource : resourcePaths){
+            if(isPartOfDir(path, resource)){
+                int begin = resource.lastIndexOf(contextName);
+                int end = resource.indexOf(path) + path.length();
+                end = resource.indexOf("/", end);
+                if(end == -1){
+                    resource = resource.substring(begin + contextName.length(), resource.length());
+                } else{
+                    resource = resource.substring(begin + contextName.length(), end);
+                }
+                paths.add(resource);
+            }
+        }
 
         if (path.isEmpty()){
             return null;
@@ -134,12 +135,9 @@ public class JerryServletContext implements ServletContext {
         return paths;
     }
 
-    //I DONT KNOW BUT FUCKING REGEX DOESNT WORK, SO I DECIDED TO DO THIS SHIET
     private boolean isPartOfDir(String path, String resource){
-        resource = resource.replaceAll("\\\\", "\\/");
-        resource = resource.substring(contextPath.length(), resource.length());
-
-        if(resource.contains(path)){
+        Pattern pattern = Pattern.compile(Pattern.quote(path) + "\\w+");
+        if(pattern.matcher(resource).find()){
             return true;
         }
         return false;
@@ -149,7 +147,8 @@ public class JerryServletContext implements ServletContext {
         URL url = null;
         for(String resource : resourcePaths){
             if (comparePath(path, resource)){
-                url = new URL(URL_SCHEME + resource);
+                url = new URL(resource);
+                break;
             }
         }
         return url;
@@ -163,12 +162,14 @@ public class JerryServletContext implements ServletContext {
     public InputStream getResourceAsStream(String path) {
         InputStream in = null;
         try {
-            File file = new File(getResource(path).getPath());
+            File file = new File(getResource(path).toURI());
             in = new FileInputStream(file);
         } catch (MalformedURLException e) {
             logger.error("Wrong resource name.");
         } catch (FileNotFoundException e) {
             logger.error("File isn't found.");
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
         }
         return in;
     }
@@ -185,10 +186,10 @@ public class JerryServletContext implements ServletContext {
 
         for(String p : resourcePaths){
             int index = p.indexOf(contextName);
-            p = p.substring(index, p.length());
+            p = p.substring(index + contextName.length(), p.length());
             if(path.equals(p)){
                 try {
-                    return new JerryStaticRequestDispatcher(new URL(URL_SCHEME + p));
+                    return new JerryStaticRequestDispatcher(new URL(p));
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
                 }

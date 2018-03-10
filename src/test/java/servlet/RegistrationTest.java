@@ -1,25 +1,26 @@
 package servlet;
 
+import com.sun.org.apache.bcel.internal.util.ClassLoader;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.Mockito;
 import servlet.registration.JerryRegistration;
 
-import javax.servlet.Registration;
+import javax.servlet.*;
 import java.util.HashMap;
 import java.util.Map;
 
-public class RegistrationTest {
+public abstract class RegistrationTest {
 
     public static final String name = "servlet";
     public static final String className = "ServletHandler";
     
-    public Registration registration;
+    public JerryRegistration registration;
 
     @Before
-    public void init(){
-        registration = new JerryRegistration(name, className);
-    }
+    public abstract void init();
 
     @Test
     public void nameTest(){
@@ -87,9 +88,21 @@ public class RegistrationTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void initAgainTest(){
-        JerryRegistration jerryregistration = (JerryRegistration) registration;
-        jerryregistration.setInitialized(true);
+    public void initAgainTest() throws ClassNotFoundException, InstantiationException, ServletException, IllegalAccessException {
+        ServletContext servletContext = Mockito.mock(ServletContext.class);
+        ClassLoader loader = Mockito.mock(ClassLoader.class);
+        Class clazz;
+
+        if(registration instanceof ServletRegistration){
+            clazz = Mockito.mock(Servlet.class).getClass();
+        } else{
+            clazz = Mockito.mock(Filter.class).getClass();
+        }
+
+        Mockito.when(servletContext.getClassLoader()).thenReturn(loader);
+        Mockito.when(loader.loadClass(registration.getClassName())).thenReturn(clazz);
+
+        registration.init(servletContext);
 
         String name = "Homer";
         String value = "Bart";

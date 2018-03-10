@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class JerryRegistration implements Registration.Dynamic {
+public abstract class JerryRegistration implements Registration.Dynamic {
 
     protected String name;
     protected String className;
@@ -103,11 +103,5 @@ public class JerryRegistration implements Registration.Dynamic {
         return async;
     }
 
-    public boolean isInitialized() {
-        return initialized;
-    }
-
-    public void setInitialized(boolean initialized) {
-        this.initialized = initialized;
-    }
+    public abstract void init(ServletContext context) throws InstantiationException, ClassNotFoundException, ServletException, IllegalAccessException;
 }

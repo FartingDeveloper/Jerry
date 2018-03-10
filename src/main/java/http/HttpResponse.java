@@ -42,7 +42,8 @@ public class HttpResponse extends HttpMessage{
     }
 
     public void setStatus(int code, String status){
-        this.status = code + Syntax.SP + status;
+        this.statusCode = code;
+        this.status = status;
     }
 
     public OutputStream getContentOutputStream(){

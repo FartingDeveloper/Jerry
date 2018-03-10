@@ -134,7 +134,7 @@ public class HttpServer extends Thread{
                 session = servletContext.getSession(sessionId);
             }
 
-            session.setLastAccesedTime(LocalTime.now().toNanoOfDay());
+            session.setLastAccessedTime(LocalTime.now().toNanoOfDay());
 
             JerryHttpServletResponse servletResponse = new JerryHttpServletResponse(response, servletContext);
             JerryHttpServletRequest servletRequest = new JerryHttpServletRequest(request, servletResponse, servletContext);

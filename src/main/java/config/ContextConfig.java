@@ -39,7 +39,7 @@ public class ContextConfig {
 
     @Bean
     public Map<String, JerryServletContext> contexts(Loader<Map<String, JerryServletContext>> loader, String rootPath){
-        return loader.load(rootPath + File.separator + WEB_APPS);
+        return loader.load(rootPath);
     }
 
 }

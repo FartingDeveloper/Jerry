@@ -1,8 +1,10 @@
 package servlet;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import servlet.context.JerryServletContext;
 import servlet.registration.JerryFilterRegistration;
 
 import javax.servlet.*;
@@ -11,9 +13,24 @@ import java.util.Enumeration;
 
 public class ServletContextTest extends ContextLoaderTest {
 
+    public static JerryServletContext jerryServletContext;
+
+    @Before
+    public void init(){
+        jerryServletContext = contexts.values().iterator().next();
+    }
+
     @Test
     public void getResourcePathsTest(){
-        if(jerryServletContext.getResourcePaths("/").size() == 0){
+        if(jerryServletContext.getResourcePaths("/js/").size() != 5){
+            Assert.fail();
+        }
+
+        if(jerryServletContext.getResourcePaths("/css/").size() != 3){
+            Assert.fail();
+        }
+
+        if(jerryServletContext.getResourcePaths("/").size() != 10){
             Assert.fail();
         }
     }

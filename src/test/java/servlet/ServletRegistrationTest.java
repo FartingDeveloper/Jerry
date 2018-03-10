@@ -1,21 +1,23 @@
 package servlet;
 
+import com.sun.org.apache.bcel.internal.util.ClassLoader;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import servlet.registration.JerryServletRegistration;
 
-import javax.servlet.ServletRegistration;
+import javax.servlet.*;
 import java.util.Collection;
 
 public class ServletRegistrationTest extends RegistrationTest{
 
-    public ServletRegistration servletRegistration;
+    public JerryServletRegistration servletRegistration;
 
     @Before
     public void init(){
-        super.init();
-        servletRegistration = new JerryServletRegistration(name, className);
+        registration = new JerryServletRegistration(name, className);
+        servletRegistration = (JerryServletRegistration) registration;
     }
 
     @Test
@@ -39,9 +41,16 @@ public class ServletRegistrationTest extends RegistrationTest{
     }
 
     @Test(expected = IllegalStateException.class)
-    public void addMappingToInitializedServletTest(){
-        JerryServletRegistration jerryServletRegistration = (JerryServletRegistration) servletRegistration;
-        jerryServletRegistration.setInitialized(true);
+    public void addMappingToInitializedServletTest() throws ClassNotFoundException, InstantiationException, ServletException, IllegalAccessException {
+        ServletContext servletContext = Mockito.mock(ServletContext.class);
+        ClassLoader loader = Mockito.mock(ClassLoader.class);
+        Servlet servlet = Mockito.mock(Servlet.class);
+        Class clazz = servlet.getClass();
+
+        Mockito.when(servletContext.getClassLoader()).thenReturn(loader);
+        Mockito.when(loader.loadClass(servletRegistration.getClassName())).thenReturn(clazz);
+
+        servletRegistration.init(servletContext);
 
         String[] strings = {"Bart", "Lisa"};
         servletRegistration.addMapping(strings);

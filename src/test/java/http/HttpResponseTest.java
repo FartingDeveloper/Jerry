@@ -51,7 +51,7 @@ public class HttpResponseTest{
             ChromeOptions option = new ChromeOptions();
             option.addArguments("--proxy-server=http://" + PROXY);
             driver = new ChromeDriver(option);
-            driver.manage().timeouts().pageLoadTimeout(30, TimeUnit.SECONDS);
+            driver.manage().timeouts().pageLoadTimeout(60, TimeUnit.SECONDS);
 
             while(true){
                 if(ready) {

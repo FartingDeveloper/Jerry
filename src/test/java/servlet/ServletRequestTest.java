@@ -15,15 +15,15 @@ import servlet.context.JerryServletContext;
 import servlet.request.JerryServletRequest;
 import servlet.response.JerryServletResponse;
 
+import javax.servlet.ServletContext;
+import javax.servlet.ServletRequestAttributeListener;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
 public class ServletRequestTest{
 
@@ -59,7 +59,7 @@ public class ServletRequestTest{
         request = new HttpRequest(line, new ArrayList<>());
         request.setHeader("Host", HOST + ":" + PORT);
         request.setHeader("Accept-Charset", UTF_8);
-        request.setHeader("Accept-Language", Locale.getDefault().toString() + "," + Locale.CANADA.toString());
+        request.setHeader("Accept-Language", Locale.getDefault().toString());
         request.setHeader("Forwarded", "for=127.0.0.1;proto=http;by=127.0.0.1:" + PORT);
 
         servletRequest = new JerryServletRequest(request, mock(JerryServletResponse.class), context);
@@ -106,14 +106,21 @@ public class ServletRequestTest{
     @Test
     public void getContentLenghtTest(){
         String contentLenght = "Content-Length";
+        String charset = "Accept-Charset";
         int lenght = 121;
 
         HttpRequest request = mock(HttpRequest.class);
 
         when(request.getHeader(contentLenght)).thenReturn(mock(Header.class));
         when(request.getHeader(contentLenght).getValue()).thenReturn(String.valueOf(lenght));
+        when(request.getHeader(charset)).thenReturn(mock(Header.class));
+        when(request.getHeader(charset).getValue()).thenReturn("UTF-8");
+        when(request.getContentInputStream()).thenReturn(mock(InputStream.class));
 
-        servletRequest = new JerryServletRequest(request, mock(JerryServletResponse.class),null);
+        JerryServletContext servletContext = mock(JerryServletContext.class);
+        when(servletContext.getRequestAttributeListeners()).thenReturn(new HashSet<ServletRequestAttributeListener>());
+
+        servletRequest = new JerryServletRequest(request, mock(JerryServletResponse.class),servletContext);
         if(servletRequest.getContentLength() != lenght){
             Assert.fail();
         }
@@ -122,14 +129,21 @@ public class ServletRequestTest{
     @Test
     public void setContentLenghtGreaterThanIntMaxTest(){
         String contentLenght = "Content-Length";
+        String charset = "Accept-Charset";
         int lenght = Integer.MAX_VALUE + 1;
 
         HttpRequest request = mock(HttpRequest.class);
 
         when(request.getHeader(contentLenght)).thenReturn(mock(Header.class));
         when(request.getHeader(contentLenght).getValue()).thenReturn(String.valueOf(lenght));
+        when(request.getHeader(charset)).thenReturn(mock(Header.class));
+        when(request.getHeader(charset).getValue()).thenReturn("UTF-8");
+        when(request.getContentInputStream()).thenReturn(mock(InputStream.class));
 
-        servletRequest = new JerryServletRequest(request, mock(JerryServletResponse.class),null);
+        JerryServletContext servletContext = mock(JerryServletContext.class);
+        when(servletContext.getRequestAttributeListeners()).thenReturn(new HashSet<ServletRequestAttributeListener>());
+
+        servletRequest = new JerryServletRequest(request, mock(JerryServletResponse.class),servletContext);
         if(servletRequest.getContentLength() != -1){
             Assert.fail();
         }
@@ -138,14 +152,21 @@ public class ServletRequestTest{
     @Test
     public void getContentLenghtLongTest(){
         String contentLenght = "Content-Length";
+        String charset = "Accept-Charset";
         long lenght = 121L;
 
         HttpRequest request = mock(HttpRequest.class);
 
         when(request.getHeader(contentLenght)).thenReturn(mock(Header.class));
         when(request.getHeader(contentLenght).getValue()).thenReturn(String.valueOf(lenght));
+        when(request.getHeader(charset)).thenReturn(mock(Header.class));
+        when(request.getHeader(charset).getValue()).thenReturn("UTF-8");
+        when(request.getContentInputStream()).thenReturn(mock(InputStream.class));
 
-        servletRequest = new JerryServletRequest(request, mock(JerryServletResponse.class),null);
+        JerryServletContext servletContext = mock(JerryServletContext.class);
+        when(servletContext.getRequestAttributeListeners()).thenReturn(new HashSet<ServletRequestAttributeListener>());
+
+        servletRequest = new JerryServletRequest(request, mock(JerryServletResponse.class),servletContext);
         if(servletRequest.getContentLength() != lenght){
             Assert.fail();
         }
@@ -153,6 +174,7 @@ public class ServletRequestTest{
 
     @Test
     public void getContentTypeTest(){
+        String charset = "Accept-Charset";
         String content = "Content-Type";
         String contentTypeValue = "application/x-www-form-urlencoded";
 
@@ -160,8 +182,14 @@ public class ServletRequestTest{
 
         when(request.getHeader(content)).thenReturn(mock(Header.class));
         when(request.getHeader(content).getValue()).thenReturn(contentTypeValue);
+        when(request.getHeader(charset)).thenReturn(mock(Header.class));
+        when(request.getHeader(charset).getValue()).thenReturn("UTF-8");
+        when(request.getContentInputStream()).thenReturn(mock(InputStream.class));
 
-        servletRequest = new JerryServletRequest(request, mock(JerryServletResponse.class),null);
+        JerryServletContext servletContext = mock(JerryServletContext.class);
+        when(servletContext.getRequestAttributeListeners()).thenReturn(new HashSet<ServletRequestAttributeListener>());
+
+        servletRequest = new JerryServletRequest(request, mock(JerryServletResponse.class),servletContext);
         if(servletRequest.getContentType() != contentTypeValue){
             Assert.fail();
         }

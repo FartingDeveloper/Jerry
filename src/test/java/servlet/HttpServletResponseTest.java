@@ -1,6 +1,7 @@
 package servlet;
 
 import http.HttpParser;
+import http.Syntax;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,11 +24,11 @@ public class HttpServletResponseTest extends ServletResponseTest {
 
     @Test
     public void addCookieTest(){
-        String name = "Hello";
-        String value = "there";
-        httpServletResponse.addCookie(new Cookie(name, value));
+        String name1 = "Hello";
+        String value1 = "there";
+        httpServletResponse.addCookie(new Cookie(name1, value1));
 
-        if(! httpServletResponse.getHeader("Set-Cookie").equals(name + "=" + value)) {
+        if(! httpServletResponse.getHeader("Set-Cookie").equals(name1 + "=" + value1)) {
             Assert.fail();
         }
     }
@@ -58,7 +59,7 @@ public class HttpServletResponseTest extends ServletResponseTest {
 
     @Test
     public void senRedirectTest() throws IOException {
-        httpServletResponse.sendRedirect("wwww.google.com");
+        httpServletResponse.sendRedirect("https://www.google.com/");
     }
 
     @Test(expected = IllegalStateException.class)
@@ -66,7 +67,7 @@ public class HttpServletResponseTest extends ServletResponseTest {
         httpServletResponse.getOutputStream().write(HTML.getBytes());
         httpServletResponse.flushBuffer();
 
-        httpServletResponse.sendRedirect("wwww.google.com");
+        httpServletResponse.sendRedirect("https://www.google.com/");
     }
 
     @Test

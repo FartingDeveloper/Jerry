@@ -1,11 +1,13 @@
 package servlet;
 
+import com.sun.org.apache.bcel.internal.util.ClassLoader;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import servlet.registration.JerryFilterRegistration;
 
-import javax.servlet.DispatcherType;
+import javax.servlet.*;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -17,8 +19,8 @@ public class FilterRegistrationTest extends RegistrationTest {
 
     @Before
     public void init(){
-        super.init();
-        jerryFilterRegistration = new JerryFilterRegistration(name, className);
+        registration = new JerryFilterRegistration(name, className);
+        jerryFilterRegistration = (JerryFilterRegistration) registration;
     }
 
     @Test
@@ -49,8 +51,16 @@ public class FilterRegistrationTest extends RegistrationTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void addMappingForUrlsToInitializedFilterTest(){
-        jerryFilterRegistration.setInitialized(true);
+    public void addMappingForUrlsToInitializedFilterTest() throws ClassNotFoundException, InstantiationException, ServletException, IllegalAccessException {
+        ServletContext servletContext = Mockito.mock(ServletContext.class);
+        ClassLoader loader = Mockito.mock(ClassLoader.class);
+        Filter filter = Mockito.mock(Filter.class);
+        Class clazz = filter.getClass();
+
+        Mockito.when(servletContext.getClassLoader()).thenReturn(loader);
+        Mockito.when(loader.loadClass(jerryFilterRegistration.getClassName())).thenReturn(clazz);
+
+        jerryFilterRegistration.init(servletContext);
         
         EnumSet<DispatcherType> dispatcherTypes = EnumSet.of(DispatcherType.REQUEST, DispatcherType.FORWARD);
         String[] urls = {"/homer", "/bart"};
@@ -86,8 +96,16 @@ public class FilterRegistrationTest extends RegistrationTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void addMappingForServletNamesToInitializedFilterTest(){
-        jerryFilterRegistration.setInitialized(true);
+    public void addMappingForServletNamesToInitializedFilterTest() throws ClassNotFoundException, InstantiationException, ServletException, IllegalAccessException {
+        ServletContext servletContext = Mockito.mock(ServletContext.class);
+        ClassLoader loader = Mockito.mock(ClassLoader.class);
+        Filter filter = Mockito.mock(Filter.class);
+        Class clazz = filter.getClass();
+
+        Mockito.when(servletContext.getClassLoader()).thenReturn(loader);
+        Mockito.when(loader.loadClass(jerryFilterRegistration.getClassName())).thenReturn(clazz);
+
+        jerryFilterRegistration.init(servletContext);
 
         EnumSet<DispatcherType> dispatcherTypes = EnumSet.of(DispatcherType.REQUEST, DispatcherType.FORWARD);
         String[] servletNames = {"homer", "bart"};

@@ -124,7 +124,7 @@ public class JerryServletRequest implements ServletRequest {
     public String getScheme() {
         String scheme = request.getRequestLine().getProtocolVersion();
         int index = scheme.indexOf("/");
-        return scheme.substring(0, index);
+        return scheme.substring(0, index).toLowerCase();
     }
 
     @Override
@@ -157,6 +157,9 @@ public class JerryServletRequest implements ServletRequest {
         for(HeaderElement element : request.getHeader("Forwarded").getElements()){
             String value = element.getParameterByName("by");
             if(value != null){
+                if(value.contains(":")){
+                    value = value.substring(0, value.indexOf(":"));
+                }
                 return value;
             }
         }
@@ -200,7 +203,9 @@ public class JerryServletRequest implements ServletRequest {
     public Locale getLocale() {
         HeaderElement element = request.getHeader("Accept-Language").getElements().get(0);
         int index = element.getName().indexOf("_");
-        return new Locale(element.getName().substring(0, index), element.getName().substring(index, element.getName().length()));
+        String language = element.getName().substring(0, index);
+        String region = element.getName().substring(index + 1, element.getName().length());
+        return new Locale.Builder().setLanguage(language).setRegion(region).build();
     }
 
     @Override
@@ -208,7 +213,9 @@ public class JerryServletRequest implements ServletRequest {
         List<Locale> list = new ArrayList<>();
         for(HeaderElement element : request.getHeader("Accept-Language").getElements()){
             int index = element.getName().indexOf("_");
-            list.add(new Locale(element.getName().substring(0, index), element.getName().substring(index + 1, element.getName().length())));
+            String language = element.getName().substring(0, index);
+            String region = element.getName().substring(index + 1, element.getName().length());
+            list.add(new Locale.Builder().setLanguage(language).setRegion(region).build());
         }
 
         return new JerryEnumeration<>(list.iterator());
