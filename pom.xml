@@ -23,7 +23,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>Main</mainClass>
+                            <mainClass>com.rg.Main</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
