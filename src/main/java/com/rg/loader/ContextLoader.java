@@ -213,7 +213,7 @@ public class ContextLoader implements Loader<Map<String, JerryServletContext>> {
                             collectServlets(node);
                             break;
                         }
-                        case "com.rg.servlet-mapping": {
+                        case "servlet-mapping": {
                             collectServletMapping(node);
                             break;
                         }
@@ -317,7 +317,7 @@ public class ContextLoader implements Loader<Map<String, JerryServletContext>> {
                     case "url-pattern":
                         filterPatterns.add(url.getTextContent());
                         break;
-                    case "com.rg.servlet-name": {
+                    case "servlet-name": {
                         servletNames.add(url.getTextContent());
                         break;
                     }
@@ -355,11 +355,11 @@ public class ContextLoader implements Loader<Map<String, JerryServletContext>> {
                 Node node = params.item(j);
 
                 switch (node.getNodeName()){
-                    case "com.rg.servlet-name": {
+                    case "servlet-name": {
                         servletName = node.getTextContent();
                         break;
                     }
-                    case "com.rg.servlet-class": {
+                    case "servlet-class": {
                         servletClass = node.getTextContent();
                         break;
                     }
@@ -387,7 +387,7 @@ public class ContextLoader implements Loader<Map<String, JerryServletContext>> {
             for (int i = 0; i < urls.getLength(); i++){
                 Node url = urls.item(i);
                 switch (url.getNodeName()){
-                    case "com.rg.servlet-name":
+                    case "servlet-name":
                         servletName = url.getTextContent();
                         break;
                     case "url-pattern":
@@ -463,7 +463,7 @@ public class ContextLoader implements Loader<Map<String, JerryServletContext>> {
                         urls.add(element.getTextContent());
                         break;
                     }
-                    case "com.rg.config.http-method": {
+                    case "http-method": {
                         methods.add(element.getTextContent());
                         break;
                     }

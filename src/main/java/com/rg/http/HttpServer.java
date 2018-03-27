@@ -52,6 +52,15 @@ public class HttpServer extends Thread{
 
                         String uri = request.getRequestLine().getUri();
 
+                        int index = uri.indexOf("/") + 1;
+                        uri = uri.substring(index, uri.length());
+                        index = uri.indexOf("/");
+                        if(index == -1){
+                            uri = "/";
+                        }else{
+                            uri = uri.substring(index, uri.length());
+                        }
+
                         RequestHandler handler = services.get(uri);
                         if(handler != null){
                             handler.handle(request, response);
@@ -80,6 +89,22 @@ public class HttpServer extends Thread{
 
             JerryServletContext servletContext = contexts.get(contextName);
 
+            try {
+                servletContext.init();
+            } catch (ClassNotFoundException e) {
+                logger.error("Class is not found error: " + contextName, e);
+                continue;
+            } catch (InstantiationException e) {
+                logger.error("Context creation error: " + contextName, e);
+                continue;
+            } catch (ServletException e) {
+                logger.error("Context creation error: " + contextName, e);
+                continue;
+            } catch (IllegalAccessException e) {
+                logger.error("Context creation error: " + contextName, e);
+                continue;
+            }
+
             Set<String> servletNames = servletContext.getServletRegistrations().keySet();
             for (final String servletName : servletNames){
                 JerryServletRegistration servletRegistration = (JerryServletRegistration) servletContext.getServletRegistration(servletName);
@@ -89,6 +114,11 @@ public class HttpServer extends Thread{
                     Map<String, JerryFilterRegistration> filterRegistrations = (Map<String, JerryFilterRegistration>) servletContext.getFilterRegistrations();
                     for(JerryFilterRegistration filterRegistration : filterRegistrations.values()){
                         for (String mapping : filterRegistration.getUrlPatternMappings()){
+                            int index = mapping.lastIndexOf("*");
+                            if(index != -1){
+                                mapping = mapping.substring(0, index);
+                            }
+
                             if(url.contains(mapping)){
                                 filters.add(filterRegistration.getFilter());
                             }
@@ -99,19 +129,6 @@ public class HttpServer extends Thread{
                     handlers.put(url, handler);
                 }
             }
-
-            try {
-                servletContext.init();
-            } catch (ClassNotFoundException e) {
-                logger.error("Class is not found error: " + contextName, e);
-            } catch (InstantiationException e) {
-                logger.error("Context creation error: " + contextName, e);
-            } catch (ServletException e) {
-                logger.error("Context creation error: " + contextName, e);
-            } catch (IllegalAccessException e) {
-                logger.error("Context creation error: " + contextName, e);
-            }
-
         }
         return handlers;
     }
@@ -121,9 +138,12 @@ public class HttpServer extends Thread{
             Thread.currentThread().setContextClassLoader(servletContext.getClassLoader());
 
             String sessionId = null;
-            for(HeaderElement element : request.getHeader("Cookie").getElements()){
-                if(element.getName().equals("JSESSIONID")){
-                    sessionId = element.getValue();
+            Header cookie = request.getHeader("Cookie");
+            if(cookie != null){
+                for(HeaderElement element : request.getHeader("Cookie").getElements()){
+                    if(element.getName().equals("JSESSIONID")){
+                        sessionId = element.getValue();
+                    }
                 }
             }
 
@@ -132,6 +152,10 @@ public class HttpServer extends Thread{
                 session = servletContext.createSession(response);
             } else{
                 session = servletContext.getSession(sessionId);
+            }
+
+            if(session == null){
+                session = servletContext.createSession(response);
             }
 
             session.setLastAccessedTime(LocalTime.now().toNanoOfDay());

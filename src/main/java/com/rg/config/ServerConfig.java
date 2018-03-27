@@ -19,7 +19,7 @@ public class ServerConfig {
         return new ServerSocket(port);
     }
 
-    @Bean
+    @Bean(initMethod = "init")
     public HttpServer server(){
         return new HttpServer();
     }

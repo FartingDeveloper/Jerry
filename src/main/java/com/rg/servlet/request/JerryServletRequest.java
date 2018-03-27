@@ -59,7 +59,11 @@ public class JerryServletRequest implements ServletRequest {
 
     @Override
     public String getCharacterEncoding() {
-        return request.getHeader("Accept-Charset").getValue();
+        if(request.getHeader("Accept-Charset") != null){
+            return request.getHeader("Accept-Charset").getValue();
+        }else{
+            return "UTF-8";
+        }
     }
 
     @Override
