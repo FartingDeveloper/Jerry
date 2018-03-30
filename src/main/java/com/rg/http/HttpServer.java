@@ -13,6 +13,7 @@ import com.rg.servlet.response.JerryHttpServletResponse;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -51,15 +52,6 @@ public class HttpServer extends Thread{
                         HttpResponse response = new HttpResponse(socket.getOutputStream(), request.getRequestLine());
 
                         String uri = request.getRequestLine().getUri();
-
-                        int index = uri.indexOf("/") + 1;
-                        uri = uri.substring(index, uri.length());
-                        index = uri.indexOf("/");
-                        if(index == -1){
-                            uri = "/";
-                        }else{
-                            uri = uri.substring(index, uri.length());
-                        }
 
                         RequestHandler handler = services.get(uri);
                         if(handler != null){
@@ -126,7 +118,7 @@ public class HttpServer extends Thread{
                     }
 
                     RequestHandler handler = createHandler(servletContext, servletRegistration.getServlet(), filters);
-                    handlers.put(url, handler);
+                    handlers.put(Syntax.URL_SEPARATOR + contextName + url, handler);
                 }
             }
         }

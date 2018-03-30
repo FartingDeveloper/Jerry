@@ -12,6 +12,7 @@ public class Syntax {
     public static final String EQUALITY = "=";
     public static final String CRLF = "\r\n";
     public static final String SP = " ";
+    public static final String URL_SEPARATOR = "/";
 
     public static int getIndex(String parameter, String character){
         Pattern pattern = Pattern.compile("[^ \\( \\[ \\{]+" + character + "[^ \\) \\] \\}]+");
