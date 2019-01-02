@@ -1,9 +1,9 @@
 package com.rg.servlet.request;
 
-import com.rg.http.Header;
-import com.rg.http.HeaderElement;
-import com.rg.http.HttpRequest;
-import com.rg.http.Syntax;
+import com.rg.http.core.Header;
+import com.rg.http.core.HeaderElement;
+import com.rg.http.io.HttpRequest;
+import com.rg.http.core.HTTP;
 import com.rg.servlet.JerryEnumeration;
 import com.rg.servlet.JerryHttpSession;
 import com.rg.servlet.context.JerryServletContext;
@@ -122,7 +122,7 @@ public class JerryHttpServletRequest extends JerryServletRequest implements Http
     @Override
     public String getQueryString() {
         String uri = request.getRequestLine().getUri();
-        int index = uri.indexOf(Syntax.PARAMS_START);
+        int index = uri.indexOf(HTTP.PARAMS_START);
         if(index == -1){
             return null;
         }

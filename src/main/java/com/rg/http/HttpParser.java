@@ -1,7 +1,10 @@
 package com.rg.http;
 
+import com.rg.http.core.Header;
+import com.rg.http.io.RequestLine;
+import com.rg.http.io.HttpRequest;
+
 import java.io.*;
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,8 +14,8 @@ public class HttpParser {
     private static final String NAME_VALUE_SEPARATOR = ":";
     private static final String CONTENT_LENGTH = "Content-Length";
 
-    public static HttpRequest parse(Socket socket) throws IOException, WrongRequestException {
-        InputStream inputStream = socket.getInputStream();
+    public static HttpRequest parse(InputStream in) throws IOException, WrongRequestException {
+        InputStream inputStream = new BufferedInputStream(in);
         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, CHARSET));
 
         RequestLine requestLine = new RequestLine(reader.readLine());

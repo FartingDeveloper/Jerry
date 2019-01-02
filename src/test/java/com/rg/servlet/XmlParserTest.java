@@ -1,6 +1,6 @@
 package com.rg.servlet;
 
-import com.rg.loader.ContextLoader;
+import com.rg.loader.XmlContextContextLoader;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import com.rg.servlet.context.JerryServletContext;
@@ -18,7 +18,7 @@ import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Map;
 
-public class WebXmlParserTest {
+public class XmlParserTest {
 
     public static JerryServletContext servletContext;
 
@@ -26,7 +26,7 @@ public class WebXmlParserTest {
     public static void beforeAll() throws IllegalAccessException, InvocationTargetException, InstantiationException, URISyntaxException, NoSuchMethodException, NoSuchFieldException, ServletException, ClassNotFoundException {
         //we need an outer class object to use the inner object constructor
         //(the inner class object needs to know about its parent object)
-        ContextLoader outerObject = new ContextLoader();
+        XmlContextContextLoader outerObject = new XmlContextContextLoader();
 
         Method loadClasses = outerObject.getClass().getDeclaredMethod("loadClasses", File.class, File.class);
         loadClasses.setAccessible(true);
@@ -41,7 +41,7 @@ public class WebXmlParserTest {
 
         //let's get the inner class
         //(we know that the outer class has only one inner class, so we can use index 0)
-        Class<?> innerClass = ContextLoader.class.getDeclaredClasses()[0];
+        Class<?> innerClass = XmlContextContextLoader.class.getDeclaredClasses()[0];
         //or if we know name of inner class we can use
         //Class<?> innerClass = Class.forName("full.package.name.OuterClass$InnerClass")
 

@@ -1,6 +1,5 @@
 package com.rg.config;
 
-import com.rg.http.HttpServer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.*;
 
@@ -17,11 +16,6 @@ public class ServerConfig {
     @Bean(destroyMethod = "close")
     public ServerSocket serverSocket() throws IOException {
         return new ServerSocket(port);
-    }
-
-    @Bean(initMethod = "init")
-    public HttpServer server(){
-        return new HttpServer();
     }
 
 }

@@ -1,9 +1,7 @@
-package com.rg.http;
+package com.rg.http.core;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 //      header  = [ element ] *( "," [ element ] )"," [ element ] )
 //      element = name [ "=" [ value ] ] *( ";" [ param ] )
@@ -24,7 +22,7 @@ public class Header {
     }
 
     private void collectElements(String value){
-        int separatorIndex = Syntax.getIndex(value, Syntax.ELEMENT_SEPARATOR);
+        int separatorIndex = HTTP.getIndex(value, HTTP.ELEMENT_SEPARATOR);
 
         if(separatorIndex != -1){
             collectElements(value.substring(separatorIndex + 1, value.length()));

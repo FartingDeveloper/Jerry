@@ -1,6 +1,7 @@
-package com.rg.http;
+package com.rg.http.io;
 
-import java.util.ArrayList;
+import com.rg.http.core.Header;
+
 import java.util.List;
 
 public class HttpMessage {

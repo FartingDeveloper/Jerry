@@ -1,5 +1,6 @@
 package com.rg.http;
 
+import com.rg.http.core.HeaderElement;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;

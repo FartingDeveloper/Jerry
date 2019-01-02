@@ -1,5 +1,8 @@
 package com.rg.http;
 
+import com.rg.http.core.Header;
+import com.rg.http.io.RequestLine;
+import com.rg.http.io.HttpRequest;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

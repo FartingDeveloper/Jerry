@@ -1,4 +1,4 @@
-package com.rg.http;
+package com.rg.http.core;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,13 +14,13 @@ public class HeaderElement {
     private Map<String, String> parameters = new HashMap<>();
 
     public HeaderElement(String element){
-        int index = Syntax.getIndex(element, Syntax.ELEMENT_PARAMS_SEPARATOR);
+        int index = HTTP.getIndex(element, HTTP.ELEMENT_PARAMS_SEPARATOR);
         if(index != -1){
             collectParams(element.substring(index + 1, element.length()));
             element = element.substring(0, index);
         }
 
-        int equalIndex = element.indexOf(Syntax.EQUALITY);
+        int equalIndex = element.indexOf(HTTP.EQUALITY);
         if(equalIndex == -1){
             this.name = element;
             this.value = null;
@@ -32,7 +32,7 @@ public class HeaderElement {
     }
 
     private void collectParams(String parameter){
-        int separatorIndex = Syntax.getIndex(parameter, Syntax.ELEMENT_PARAMS_SEPARATOR);
+        int separatorIndex = HTTP.getIndex(parameter, HTTP.ELEMENT_PARAMS_SEPARATOR);
 
         if(separatorIndex != -1){
             collectParams(parameter.substring(separatorIndex + 1, parameter.length()));
@@ -41,7 +41,7 @@ public class HeaderElement {
             separatorIndex = parameter.length();
         }
 
-        int equalityIndex = parameter.indexOf(Syntax.EQUALITY);
+        int equalityIndex = parameter.indexOf(HTTP.EQUALITY);
         String parameterName = parameter.substring(0, equalityIndex);
         String parameterValue = parameter.substring(equalityIndex + 1, separatorIndex);
         parameters.put(parameterName, parameterValue);
@@ -69,12 +69,12 @@ public class HeaderElement {
         if (value == null) {
             result.append(name);
         } else {
-            result.append(name + Syntax.EQUALITY + value);
+            result.append(name + HTTP.EQUALITY + value);
         }
 
         if (parameters.size() != 0) {
             for (String str : parameters.keySet()) {
-                result.append(Syntax.ELEMENT_PARAMS_SEPARATOR + str + "=" + parameters.get(str));
+                result.append(HTTP.ELEMENT_PARAMS_SEPARATOR + str + "=" + parameters.get(str));
             }
         }
         return result.toString();

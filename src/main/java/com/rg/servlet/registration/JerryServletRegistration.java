@@ -3,6 +3,7 @@ package com.rg.servlet.registration;
 import org.apache.logging.log4j.LogManager;
 import com.rg.servlet.JerryEnumeration;
 import com.rg.servlet.context.JerryServletContext;
+import org.apache.logging.log4j.Logger;
 
 import javax.servlet.*;
 import java.io.IOException;
@@ -17,7 +18,7 @@ public class JerryServletRegistration extends JerryRegistration implements Servl
     private Set<String> mappings;
     protected JerryServletRegistration.JerryServletConfig config;
 
-    protected org.apache.logging.log4j.Logger logger = LogManager.getLogger("com.rg.servlet.registration.JerryServletRegistration");
+    protected Logger LOG = LogManager.getLogger(JerryServletRegistration.class);
 
     public JerryServletRegistration(String servletName, String servletClassName){
         super(servletName, servletClassName);

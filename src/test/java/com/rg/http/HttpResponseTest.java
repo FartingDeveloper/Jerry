@@ -1,17 +1,16 @@
 package com.rg.http;
 
+import com.rg.http.io.HttpRequest;
+import com.rg.http.io.HttpResponse;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-import com.rg.servlet.response.JerryServletResponse;
 
-import javax.servlet.ServletContext;
 import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -76,7 +75,7 @@ public class HttpResponseTest{
         while(ready) {
             try {
                 socket = serverSocket.accept();
-                request = HttpParser.parse(socket);
+                request = HttpParser.parse(socket.getInputStream());
                 response = new HttpResponse(socket.getOutputStream(), request.getRequestLine());
                 ready = false;
             } catch (NullPointerException e) {

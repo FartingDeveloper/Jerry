@@ -1,7 +1,7 @@
 package com.rg.servlet.request;
 
-import com.rg.http.HeaderElement;
-import com.rg.http.HttpRequest;
+import com.rg.http.core.HeaderElement;
+import com.rg.http.io.HttpRequest;
 import com.rg.servlet.JerryEnumeration;
 import com.rg.servlet.context.JerryAsyncContext;
 import com.rg.servlet.context.JerryServletContext;

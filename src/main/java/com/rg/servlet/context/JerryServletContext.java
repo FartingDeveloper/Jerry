@@ -1,6 +1,6 @@
 package com.rg.servlet.context;
 
-import com.rg.http.HttpResponse;
+import com.rg.http.io.HttpResponse;
 import org.apache.logging.log4j.LogManager;
 import com.rg.servlet.JerryEnumeration;
 import com.rg.servlet.JerryHttpSession;
@@ -8,6 +8,7 @@ import com.rg.servlet.registration.JerryDynamicRequestDispatcher;
 import com.rg.servlet.registration.JerryFilterRegistration;
 import com.rg.servlet.registration.JerryServletRegistration;
 import com.rg.servlet.registration.JerryStaticRequestDispatcher;
+import org.apache.logging.log4j.Logger;
 
 import javax.activation.MimeType;
 import javax.servlet.*;
@@ -60,7 +61,7 @@ public class JerryServletContext implements ServletContext {
 
     private Map<String, Object> attributes = new HashMap<>();
 
-    private org.apache.logging.log4j.Logger logger = LogManager.getLogger("com.rg.servlet.context.JerryServletContext");
+    private Logger LOG = LogManager.getLogger(JerryServletContext.class);
 
     public JerryServletContext(Map<String, JerryServletContext> contexts, Set<String> resourcePaths, ClassLoader classLoader){
         this.contexts = contexts;
@@ -163,11 +164,11 @@ public class JerryServletContext implements ServletContext {
             File file = new File(getResource(path).toURI());
             in = new FileInputStream(file);
         } catch (MalformedURLException e) {
-            logger.error("Wrong resource name.", e);
+            LOG.error("Wrong resource name.", e);
         } catch (FileNotFoundException e) {
-            logger.error("File isn't found.", e);
+            LOG.error("File isn't found.", e);
         } catch (URISyntaxException e) {
-            logger.error("URI syntax problem.", e);
+            LOG.error("URI syntax problem.", e);
         }
         return in;
     }
@@ -189,7 +190,7 @@ public class JerryServletContext implements ServletContext {
                 try {
                     return new JerryStaticRequestDispatcher(new URL(p));
                 } catch (MalformedURLException e) {
-                    logger.error("URL problem.", e);
+                    LOG.error("URL problem.", e);
                 }
             }
         }
@@ -220,7 +221,7 @@ public class JerryServletContext implements ServletContext {
     }
 
     public void log(String msg) {
-        logger.info(msg);
+        LOG.info(msg);
     }
 
     public void log(Exception exception, String msg) {
@@ -228,7 +229,7 @@ public class JerryServletContext implements ServletContext {
     }
 
     public void log(String message, Throwable throwable) {
-        logger.error(message + throwable.getStackTrace());
+        LOG.error(message + throwable.getStackTrace());
     }
 
     public String getRealPath(String path) {
@@ -369,9 +370,9 @@ public class JerryServletContext implements ServletContext {
         try {
             servlet =  clazz.newInstance();
         } catch (InstantiationException e) {
-            logger.error("Can' create com.rg.servlet.", e);
+            LOG.error("Can' create com.rg.servlet.", e);
         } catch (IllegalAccessException e) {
-            logger.error("Can' create com.rg.servlet.", e);
+            LOG.error("Can' create com.rg.servlet.", e);
         }
         return servlet;
     }
@@ -423,9 +424,9 @@ public class JerryServletContext implements ServletContext {
         try {
             filter =  clazz.newInstance();
         } catch (InstantiationException e) {
-            logger.error("Can' create com.rg.servlet.", e);
+            LOG.error("Can' create com.rg.servlet.", e);
         } catch (IllegalAccessException e) {
-            logger.error("Can' create com.rg.servlet.", e);
+            LOG.error("Can' create com.rg.servlet.", e);
         }
         return filter;
     }
@@ -465,11 +466,11 @@ public class JerryServletContext implements ServletContext {
                 throw new IllegalArgumentException();
             }
         } catch (ClassNotFoundException e) {
-            logger.error("Class not found.", e);
+            LOG.error("Class not found.", e);
         } catch (IllegalAccessException e) {
-            logger.error("Can' create com.rg.servlet.", e);
+            LOG.error("Can' create com.rg.servlet.", e);
         } catch (InstantiationException e) {
-            logger.error("Can' create com.rg.servlet.", e);
+            LOG.error("Can' create com.rg.servlet.", e);
         }
     }
 

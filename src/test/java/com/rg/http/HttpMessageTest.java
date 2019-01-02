@@ -1,7 +1,8 @@
 package com.rg.http;
 
+import com.rg.http.core.Header;
+import com.rg.http.io.HttpMessage;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 

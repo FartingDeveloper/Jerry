@@ -1,9 +1,9 @@
 package com.rg.servlet.response;
 
-import com.rg.http.Header;
-import com.rg.http.HeaderElement;
-import com.rg.http.HttpResponse;
-import com.rg.http.Syntax;
+import com.rg.http.core.HTTP;
+import com.rg.http.core.Header;
+import com.rg.http.core.HeaderElement;
+import com.rg.http.io.HttpResponse;
 import com.rg.servlet.io.JerryServletOutputStream;
 
 import javax.servlet.ServletContext;
@@ -80,10 +80,10 @@ public class JerryServletResponse implements ServletResponse {
     public void setCharacterEncoding(String charset) {
         checkCommit();
         if(response.getHeader("Content-Type") != null){
-            response.setHeader("Content-Type", response.getHeader("Content-Type").getName() + Syntax.ELEMENT_PARAMS_SEPARATOR + "charset=" + charset);
+            response.setHeader("Content-Type", response.getHeader("Content-Type").getName() + HTTP.ELEMENT_PARAMS_SEPARATOR + "charset=" + charset);
         }
         else{
-            response.setHeader("Content-Type", "text/html" + Syntax.ELEMENT_PARAMS_SEPARATOR + "charset=" + charset);
+            response.setHeader("Content-Type", "text/html" + HTTP.ELEMENT_PARAMS_SEPARATOR + "charset=" + charset);
         }
     }
 

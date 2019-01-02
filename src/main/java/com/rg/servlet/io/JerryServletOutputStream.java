@@ -1,6 +1,6 @@
 package com.rg.servlet.io;
 
-import com.rg.http.HttpResponse;
+import com.rg.http.io.HttpResponse;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.WriteListener;

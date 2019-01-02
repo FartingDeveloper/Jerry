@@ -11,7 +11,7 @@ import javax.servlet.*;
 import java.net.MalformedURLException;
 import java.util.Enumeration;
 
-public class ServletContextTest extends ContextLoaderTest {
+public class ServletContextTest extends XmlContextLoaderTest {
 
     public static JerryServletContext jerryServletContext;
 

@@ -1,4 +1,4 @@
-package com.rg.http;
+package com.rg.http.io;
 
 public class RequestLine {
 
@@ -10,15 +10,14 @@ public class RequestLine {
     private String uri;
     private String protocolVersion;
 
-    public RequestLine(String line){
+    public RequestLine(String line) {
         this.line = line;
         int index = line.indexOf(SP);
         method = line.substring(0, index);
         line = line.substring(index + 1, line.length());
         index = line.indexOf(SP);
         uri = line.substring(0, index);
-        line = line.substring(index + 1, line.length());
-        protocolVersion = line.substring(0, line.length());
+        protocolVersion = line.substring(index + 1, line.length());
     }
 
     public String getMethod() {

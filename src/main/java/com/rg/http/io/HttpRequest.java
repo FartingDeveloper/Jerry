@@ -1,4 +1,7 @@
-package com.rg.http;
+package com.rg.http.io;
+
+import com.rg.http.core.HTTP;
+import com.rg.http.core.Header;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -14,10 +17,11 @@ public class HttpRequest extends HttpMessage{
 
     public HttpRequest(RequestLine line, List<Header> headers){
         super(headers);
+
         this.requestLine = line;
 
         String uri = requestLine.getUri();
-        int paramsIndex = uri.indexOf(Syntax.PARAMS_START);
+        int paramsIndex = uri.indexOf(HTTP.PARAMS_START);
 
         if(paramsIndex != -1){
             collectRequestParams(uri.substring(paramsIndex + 1, uri.length()));
@@ -52,13 +56,13 @@ public class HttpRequest extends HttpMessage{
     }
 
     private void collectRequestParams(String line){
-        int index = line.indexOf(Syntax.PARAMS_SEPARATOR);
+        int index = line.indexOf(HTTP.PARAMS_SEPARATOR);
         if(index != -1){
             collectRequestParams(line.substring(index + 1, line.length()));
             line = line.substring(0, index);
         }
 
-        int equalityIndex = line.indexOf(Syntax.EQUALITY);
+        int equalityIndex = line.indexOf(HTTP.EQUALITY);
         String name = line.substring(0, equalityIndex);
         String value = line.substring(equalityIndex + 1, line.length());
 

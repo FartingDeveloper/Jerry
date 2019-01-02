@@ -1,8 +1,8 @@
 package com.rg.servlet;
 
-import com.rg.http.Header;
-import com.rg.http.HttpRequest;
-import com.rg.http.RequestLine;
+import com.rg.http.core.Header;
+import com.rg.http.io.HttpRequest;
+import com.rg.http.io.RequestLine;
 import org.apache.http.client.utils.URIBuilder;
 import org.junit.Assert;
 import org.junit.Before;

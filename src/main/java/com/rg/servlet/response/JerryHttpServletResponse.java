@@ -1,8 +1,8 @@
 package com.rg.servlet.response;
 
-import com.rg.http.Header;
-import com.rg.http.HeaderElement;
-import com.rg.http.HttpResponse;
+import com.rg.http.core.Header;
+import com.rg.http.core.HeaderElement;
+import com.rg.http.io.HttpResponse;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.Cookie;

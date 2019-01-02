@@ -1,9 +1,9 @@
-package com.rg.http;
+package com.rg.http.core;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class Syntax {
+public class HTTP {
 
     public static final String PARAMS_START = "?";
     public static final String PARAMS_SEPARATOR = "&";
