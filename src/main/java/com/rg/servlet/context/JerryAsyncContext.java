@@ -1,7 +1,5 @@
 package com.rg.servlet.context;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import com.rg.servlet.request.JerryServletRequest;
 import com.rg.servlet.response.JerryServletResponse;
 
@@ -15,8 +13,6 @@ import java.util.concurrent.TimeUnit;
 
 public class JerryAsyncContext implements AsyncContext {
 
-    @Autowired
-    @Qualifier("asyncContextThreadPool")
     private static ScheduledExecutorService threadPool;
 
     private JerryServletRequest servletRequest;
@@ -34,11 +30,11 @@ public class JerryAsyncContext implements AsyncContext {
 
     private Map<AsyncListener, RequestResponsePair> listeners = new LinkedHashMap<>();
 
-    public JerryAsyncContext(){
+    public JerryAsyncContext() {
         timeout = 30000;
     }
 
-    public void init(JerryServletRequest request, JerryServletResponse response, String path){
+    public void init(JerryServletRequest request, JerryServletResponse response, String path) {
         this.servletRequest = request;
         this.servletResponse = response;
         this.path = path;
@@ -77,7 +73,7 @@ public class JerryAsyncContext implements AsyncContext {
     @Override
     public void dispatch(ServletContext context, String path) {
         try {
-            if(completed || (!dispatched && initialized)){
+            if (completed || (!dispatched && initialized)) {
                 throw new IllegalStateException();
             }
 
@@ -93,8 +89,8 @@ public class JerryAsyncContext implements AsyncContext {
 
     @Override
     public void complete() {
-        if(! dispatched && ! completed){
-            for (AsyncListener listener : listeners.keySet()){
+        if (!dispatched && !completed) {
+            for (AsyncListener listener : listeners.keySet()) {
                 RequestResponsePair pair = listeners.get(listener);
                 try {
                     listener.onComplete(new AsyncEvent(this, pair.servletRequest, pair.servletResponse));
@@ -112,10 +108,10 @@ public class JerryAsyncContext implements AsyncContext {
     @Override
     public void start(Runnable run) {
         ScheduledFuture future = threadPool.schedule(run, timeout, TimeUnit.MILLISECONDS);
-        threadPool.submit(()->{
-            if(future.isCancelled()){
-                try{
-                    for (AsyncListener listener : listeners.keySet()){
+        threadPool.submit(() -> {
+            if (future.isCancelled()) {
+                try {
+                    for (AsyncListener listener : listeners.keySet()) {
                         RequestResponsePair pair = listeners.get(listener);
                         listener.onTimeout(new AsyncEvent(this, pair.servletRequest, pair.servletResponse));
                     }
@@ -133,7 +129,7 @@ public class JerryAsyncContext implements AsyncContext {
 
     @Override
     public void addListener(AsyncListener listener, ServletRequest servletRequest, ServletResponse servletResponse) {
-        if(dispatched){
+        if (dispatched) {
             throw new IllegalStateException();
         }
         listeners.put(listener, new RequestResponsePair(servletRequest, servletResponse));
@@ -154,7 +150,7 @@ public class JerryAsyncContext implements AsyncContext {
 
     @Override
     public void setTimeout(long timeout) {
-        if(dispatched){
+        if (dispatched) {
             throw new IllegalStateException();
         }
         this.timeout = timeout;

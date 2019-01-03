@@ -17,7 +17,7 @@ public class JerryServletOutputStream extends ServletOutputStream {
 
     private WriteListener writeListener;
 
-    public JerryServletOutputStream(HttpResponse response){
+    public JerryServletOutputStream(HttpResponse response) {
         this.response = response;
         bufferSize = 1024;
         bufferIndex = 0;
@@ -36,13 +36,12 @@ public class JerryServletOutputStream extends ServletOutputStream {
 
     @Override
     public void write(int b) throws IOException {
-        if(bufferIndex < bufferSize){
-            if(writeListener != null){
+        if (bufferIndex < bufferSize) {
+            if (writeListener != null) {
                 writeListener.onWritePossible();
             }
             buffer[bufferIndex++] = (byte) b;
-        }
-        else{
+        } else {
             flush();
         }
     }
@@ -56,13 +55,13 @@ public class JerryServletOutputStream extends ServletOutputStream {
         buffer = Arrays.copyOf(buffer, bufferSize);
     }
 
-    public void resetBuffer(){
+    public void resetBuffer() {
         bufferIndex = 0;
     }
 
     @Override
     public void flush() throws IOException {
-        for(int i = 0; i < bufferIndex; i++){
+        for (int i = 0; i < bufferIndex; i++) {
             response.getContentOutputStream().write(buffer[i]);
         }
         bufferIndex = 0;

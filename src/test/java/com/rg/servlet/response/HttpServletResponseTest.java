@@ -1,11 +1,10 @@
-package com.rg.servlet;
+package com.rg.servlet.response;
 
 import com.rg.http.HttpParser;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import com.rg.servlet.response.JerryHttpServletResponse;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.Cookie;

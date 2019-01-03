@@ -25,9 +25,9 @@ public class HttpParser {
         int contentLength = -1;
 
         String header;
-        while (! (header = reader.readLine()).isEmpty()){
+        while (!(header = reader.readLine()).isEmpty()) {
             int index = header.indexOf(NAME_VALUE_SEPARATOR);
-            if(index == -1){
+            if (index == -1) {
                 throw new WrongRequestException();
             }
 
@@ -36,25 +36,25 @@ public class HttpParser {
 
             headers.add(new Header(name, value));
 
-            if(name.equals(CONTENT_LENGTH)){
+            if (name.equals(CONTENT_LENGTH)) {
                 contentLength = Integer.valueOf(value);
             }
         }
 
-        if(header.isEmpty() && contentLength == -1){
+        if (header.isEmpty() && contentLength == -1) {
             return new HttpRequest(requestLine, headers);
         }
 
         StringBuilder content = new StringBuilder();
         int i = 0;
-        while (i != contentLength){
+        while (i != contentLength) {
             content.append(reader.readLine());
         }
 
         return new HttpRequest(requestLine, headers, content.toString());
     }
 
-    public static class WrongRequestException extends Exception{
+    public static class WrongRequestException extends Exception {
 
     }
 

@@ -14,20 +14,19 @@ public class Header {
 
     private List<HeaderElement> elements = new ArrayList<>();
 
-    public Header(String name, String value){
+    public Header(String name, String value) {
         this.name = name;
         this.value = value;
 
         collectElements(value);
     }
 
-    private void collectElements(String value){
+    private void collectElements(String value) {
         int separatorIndex = HTTP.getIndex(value, HTTP.ELEMENT_SEPARATOR);
 
-        if(separatorIndex != -1){
+        if (separatorIndex != -1) {
             collectElements(value.substring(separatorIndex + 1, value.length()));
-        }
-        else{
+        } else {
             separatorIndex = value.length();
         }
 

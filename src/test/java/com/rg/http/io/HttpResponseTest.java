@@ -1,5 +1,6 @@
-package com.rg.http;
+package com.rg.http.io;
 
+import com.rg.http.HttpParser;
 import com.rg.http.io.HttpRequest;
 import com.rg.http.io.HttpResponse;
 import org.junit.After;

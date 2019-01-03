@@ -31,7 +31,7 @@ public class JerryServletRequest implements ServletRequest {
 
     private JerryAsyncContext asyncContext;
 
-    public JerryServletRequest(HttpRequest request, JerryServletResponse servletResponse, JerryServletContext servletContext){
+    public JerryServletRequest(HttpRequest request, JerryServletResponse servletResponse, JerryServletContext servletContext) {
         this.request = request;
         this.servletInputStream = new JerryServletInputStream(request);
 
@@ -59,9 +59,9 @@ public class JerryServletRequest implements ServletRequest {
 
     @Override
     public String getCharacterEncoding() {
-        if(request.getHeader("Accept-Charset") != null){
+        if (request.getHeader("Accept-Charset") != null) {
             return request.getHeader("Accept-Charset").getValue();
-        }else{
+        } else {
             return "UTF-8";
         }
     }
@@ -74,7 +74,7 @@ public class JerryServletRequest implements ServletRequest {
     @Override
     public int getContentLength() {
         Integer length = Integer.valueOf(request.getHeader("Content-Length").getValue());
-        if(length == null || length < 0){
+        if (length == null || length < 0) {
             return -1;
         }
         return length;
@@ -83,7 +83,7 @@ public class JerryServletRequest implements ServletRequest {
     @Override
     public long getContentLengthLong() {
         Long length = Long.valueOf(request.getHeader("Content-Length").getValue());
-        if(length == null|| length < 0){
+        if (length == null || length < 0) {
             return -1;
         }
         return length;
@@ -135,7 +135,7 @@ public class JerryServletRequest implements ServletRequest {
     public String getServerName() {
         String name = request.getHeader("Host").getValue();
         int index = name.lastIndexOf(":");
-        if(index != -1){
+        if (index != -1) {
             return name.substring(0, index);
         }
         return name;
@@ -145,7 +145,7 @@ public class JerryServletRequest implements ServletRequest {
     public int getServerPort() {
         String port = request.getHeader("Host").getValue();
         int index = port.lastIndexOf(":");
-        if(index != -1){
+        if (index != -1) {
             return Integer.valueOf(port.substring(index + 1, port.length()));
         }
         return -1;
@@ -158,10 +158,10 @@ public class JerryServletRequest implements ServletRequest {
 
     @Override
     public String getRemoteAddr() {
-        for(HeaderElement element : request.getHeader("Forwarded").getElements()){
+        for (HeaderElement element : request.getHeader("Forwarded").getElements()) {
             String value = element.getParameterByName("by");
-            if(value != null){
-                if(value.contains(":")){
+            if (value != null) {
+                if (value.contains(":")) {
                     value = value.substring(0, value.indexOf(":"));
                 }
                 return value;
@@ -172,9 +172,9 @@ public class JerryServletRequest implements ServletRequest {
 
     @Override
     public String getRemoteHost() {
-        for(HeaderElement element : request.getHeader("Forwarded").getElements()){
+        for (HeaderElement element : request.getHeader("Forwarded").getElements()) {
             String value = element.getParameterByName("host");
-            if(value != null){
+            if (value != null) {
                 return value;
             }
         }
@@ -183,12 +183,12 @@ public class JerryServletRequest implements ServletRequest {
 
     @Override
     public void setAttribute(String name, Object o) {
-        if(attributes.containsKey(name)){
-            for (ServletRequestAttributeListener listener : listeners){
+        if (attributes.containsKey(name)) {
+            for (ServletRequestAttributeListener listener : listeners) {
                 listener.attributeReplaced(new ServletRequestAttributeEvent(servletContext, this, name, o));
             }
-        } else{
-            for (ServletRequestAttributeListener listener : listeners){
+        } else {
+            for (ServletRequestAttributeListener listener : listeners) {
                 listener.attributeAdded(new ServletRequestAttributeEvent(servletContext, this, name, o));
             }
         }
@@ -197,7 +197,7 @@ public class JerryServletRequest implements ServletRequest {
 
     @Override
     public void removeAttribute(String name) {
-        for (ServletRequestAttributeListener listener : listeners){
+        for (ServletRequestAttributeListener listener : listeners) {
             listener.attributeRemoved(new ServletRequestAttributeEvent(servletContext, this, name, attributes.get(name)));
         }
         attributes.remove(name);
@@ -215,7 +215,7 @@ public class JerryServletRequest implements ServletRequest {
     @Override
     public Enumeration<Locale> getLocales() {
         List<Locale> list = new ArrayList<>();
-        for(HeaderElement element : request.getHeader("Accept-Language").getElements()){
+        for (HeaderElement element : request.getHeader("Accept-Language").getElements()) {
             int index = element.getName().indexOf("_");
             String language = element.getName().substring(0, index);
             String region = element.getName().substring(index + 1, element.getName().length());
@@ -240,7 +240,7 @@ public class JerryServletRequest implements ServletRequest {
         return request.getHeader("Referer").getName();
     }
 
-    public String getPath(){
+    public String getPath() {
         String uri = request.getRequestLine().getUri();
         int index = uri.indexOf("://");
         uri = uri.substring(index + 3, uri.length());
@@ -251,11 +251,11 @@ public class JerryServletRequest implements ServletRequest {
 
     @Override
     public int getRemotePort() {
-        HeaderElement element  = request.getHeader("Forwarded").getElements().get(0);
+        HeaderElement element = request.getHeader("Forwarded").getElements().get(0);
         String value = element.getParameterByName("by");
-        if(value != null){
+        if (value != null) {
             int index = value.indexOf(":");
-            if(index != -1){
+            if (index != -1) {
                 return Integer.valueOf(value.substring(index + 1, value.length()));
             }
         }
@@ -269,9 +269,9 @@ public class JerryServletRequest implements ServletRequest {
 
     @Override
     public String getLocalAddr() {
-        for(HeaderElement element : request.getHeader("Forwarded").getElements()){
+        for (HeaderElement element : request.getHeader("Forwarded").getElements()) {
             String value = element.getParameterByName("for");
-            if(value != null){
+            if (value != null) {
                 return value;
             }
         }
@@ -297,7 +297,7 @@ public class JerryServletRequest implements ServletRequest {
 
     @Override
     public AsyncContext startAsync(ServletRequest servletRequest, ServletResponse servletResponse) throws IllegalStateException {
-        if(asyncContext == null){
+        if (asyncContext == null) {
             asyncContext = new JerryAsyncContext();
             asyncContext.init((JerryServletRequest) servletRequest, (JerryServletResponse) servletResponse, getPath());
             asyncContext.setOriginalRequestAndResponse(false);

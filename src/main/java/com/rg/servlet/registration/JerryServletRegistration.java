@@ -18,8 +18,6 @@ public class JerryServletRegistration extends JerryRegistration implements Servl
     private Set<String> mappings;
     protected JerryServletRegistration.JerryServletConfig config;
 
-    protected Logger LOG = LogManager.getLogger(JerryServletRegistration.class);
-
     public JerryServletRegistration(String servletName, String servletClassName){
         super(servletName, servletClassName);
         mappings = new LinkedHashSet<>();

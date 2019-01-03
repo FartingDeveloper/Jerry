@@ -26,6 +26,8 @@ import java.util.regex.Pattern;
 
 public class JerryServletContext implements ServletContext {
 
+    private static final Logger LOG = LogManager.getLogger(JerryServletContext.class);
+
     private boolean initialized;
 
     private String contextPath;
@@ -61,9 +63,7 @@ public class JerryServletContext implements ServletContext {
 
     private Map<String, Object> attributes = new HashMap<>();
 
-    private Logger LOG = LogManager.getLogger(JerryServletContext.class);
-
-    public JerryServletContext(Map<String, JerryServletContext> contexts, Set<String> resourcePaths, ClassLoader classLoader){
+    public JerryServletContext(ClassLoader classLoader, Map<String, JerryServletContext> contexts, Set<String> resourcePaths) {
         this.contexts = contexts;
         this.resourcePaths = resourcePaths;
         this.classLoader = classLoader;
@@ -114,29 +114,29 @@ public class JerryServletContext implements ServletContext {
 
         path = contextName + path;
 
-        for(String resource : resourcePaths){
-            if(isPartOfDir(path, resource)){
+        for (String resource : resourcePaths) {
+            if (isPartOfDir(path, resource)) {
                 int begin = resource.lastIndexOf(contextName);
                 int end = resource.indexOf(path) + path.length();
                 end = resource.indexOf("/", end);
-                if(end == -1){
+                if (end == -1) {
                     resource = resource.substring(begin + contextName.length(), resource.length());
-                } else{
+                } else {
                     resource = resource.substring(begin + contextName.length(), end);
                 }
                 paths.add(resource);
             }
         }
 
-        if (path.isEmpty()){
+        if (path.isEmpty()) {
             return null;
         }
         return paths;
     }
 
-    private boolean isPartOfDir(String path, String resource){
+    private boolean isPartOfDir(String path, String resource) {
         Pattern pattern = Pattern.compile(Pattern.quote(path) + "\\w+");
-        if(pattern.matcher(resource).find()){
+        if (pattern.matcher(resource).find()) {
             return true;
         }
         return false;
@@ -144,8 +144,8 @@ public class JerryServletContext implements ServletContext {
 
     public URL getResource(String path) throws MalformedURLException {
         URL url = null;
-        for(String resource : resourcePaths){
-            if (comparePath(path, resource)){
+        for (String resource : resourcePaths) {
+            if (comparePath(path, resource)) {
                 url = new URL(resource);
                 break;
             }
@@ -153,7 +153,7 @@ public class JerryServletContext implements ServletContext {
         return url;
     }
 
-    private boolean comparePath(String path, String resource){
+    private boolean comparePath(String path, String resource) {
         Pattern pattern = Pattern.compile(path + "$");
         return pattern.matcher(resource).find();
     }
@@ -174,19 +174,19 @@ public class JerryServletContext implements ServletContext {
     }
 
     public RequestDispatcher getRequestDispatcher(String path) {
-        for (JerryServletRegistration servletRegistration : servletRegistrations.values()){
-            for (String p : servletRegistration.getMappings()){
-                if(path.equals(p)){
+        for (JerryServletRegistration servletRegistration : servletRegistrations.values()) {
+            for (String p : servletRegistration.getMappings()) {
+                if (path.equals(p)) {
                     Servlet servlet = servletRegistration.getServlet();
                     return new JerryDynamicRequestDispatcher(servlet);
                 }
             }
         }
 
-        for(String p : resourcePaths){
+        for (String p : resourcePaths) {
             int index = p.indexOf(contextName);
             p = p.substring(index + contextName.length(), p.length());
-            if(path.equals(p)){
+            if (path.equals(p)) {
                 try {
                     return new JerryStaticRequestDispatcher(new URL(p));
                 } catch (MalformedURLException e) {
@@ -199,8 +199,8 @@ public class JerryServletContext implements ServletContext {
     }
 
     public RequestDispatcher getNamedDispatcher(String name) {
-        for (JerryServletRegistration servletRegistration : servletRegistrations.values()){
-            if(servletRegistration.getName().equals(name)){
+        for (JerryServletRegistration servletRegistration : servletRegistrations.values()) {
+            if (servletRegistration.getName().equals(name)) {
                 Servlet servlet = servletRegistration.getServlet();
                 return new JerryDynamicRequestDispatcher(servlet);
             }
@@ -241,7 +241,7 @@ public class JerryServletContext implements ServletContext {
     }
 
     public String getInitParameter(String name) {
-        if(name == null) throw new NullPointerException();
+        if (name == null) throw new NullPointerException();
         return contextParameters.get(name);
     }
 
@@ -263,8 +263,8 @@ public class JerryServletContext implements ServletContext {
     }
 
     public boolean setInitParameter(String name, String value) {
-        if(name == null) throw new NullPointerException();
-        if(initialized) throw new IllegalStateException();
+        if (name == null) throw new NullPointerException();
+        if (initialized) throw new IllegalStateException();
 
         boolean result = contextParameters.containsKey(name);
         contextParameters.put(name, value);
@@ -272,7 +272,7 @@ public class JerryServletContext implements ServletContext {
     }
 
     public Object getAttribute(String name) {
-        if(name == null) throw new NullPointerException();
+        if (name == null) throw new NullPointerException();
         return attributes.get(name);
     }
 
@@ -294,14 +294,14 @@ public class JerryServletContext implements ServletContext {
     }
 
     public void setAttribute(String name, Object object) {
-        if(name == null) throw new NullPointerException();
+        if (name == null) throw new NullPointerException();
 
-        if (attributes.containsKey(name)){
-            for (ServletContextAttributeListener listener : servletContextAttributeListeners){
+        if (attributes.containsKey(name)) {
+            for (ServletContextAttributeListener listener : servletContextAttributeListeners) {
                 listener.attributeReplaced(new ServletContextAttributeEvent(this, name, object));
             }
-        }else {
-            for (ServletContextAttributeListener listener : servletContextAttributeListeners){
+        } else {
+            for (ServletContextAttributeListener listener : servletContextAttributeListeners) {
                 listener.attributeAdded(new ServletContextAttributeEvent(this, name, object));
             }
         }
@@ -310,7 +310,7 @@ public class JerryServletContext implements ServletContext {
     }
 
     public void removeAttribute(String name) {
-        for (ServletContextAttributeListener listener : servletContextAttributeListeners){
+        for (ServletContextAttributeListener listener : servletContextAttributeListeners) {
             listener.attributeRemoved(new ServletContextAttributeEvent(this, name, attributes.get(name)));
         }
         attributes.remove(name);
@@ -329,7 +329,7 @@ public class JerryServletContext implements ServletContext {
 
         JerryServletRegistration servletRegistration;
         servletRegistration = servletRegistrations.get(servletName);
-        if(servletRegistration != null){
+        if (servletRegistration != null) {
             servletRegistration.setClassName(className);
             return servletRegistration;
         }
@@ -345,7 +345,7 @@ public class JerryServletContext implements ServletContext {
 
         JerryServletRegistration servletRegistration;
         servletRegistration = servletRegistrations.get(servletName);
-        if(servletRegistration != null){
+        if (servletRegistration != null) {
             servletRegistration.setClassName(servlet.getClass().getName());
             servletRegistration.setServlet(servlet);
             return servletRegistration;
@@ -368,7 +368,7 @@ public class JerryServletContext implements ServletContext {
     public <T extends Servlet> T createServlet(Class<T> clazz) throws ServletException {
         T servlet = null;
         try {
-            servlet =  clazz.newInstance();
+            servlet = clazz.newInstance();
         } catch (InstantiationException e) {
             LOG.error("Can' create com.rg.servlet.", e);
         } catch (IllegalAccessException e) {
@@ -389,7 +389,7 @@ public class JerryServletContext implements ServletContext {
         check(filterName);
 
         JerryFilterRegistration filterRegistration = filterRegistrations.get(filterName);
-        if(filterRegistrations.get(filterName) != null){
+        if (filterRegistrations.get(filterName) != null) {
             filterRegistrations.get(filterName).setClassName(className);
             return filterRegistration;
         }
@@ -403,7 +403,7 @@ public class JerryServletContext implements ServletContext {
         check(filterName);
 
         JerryFilterRegistration filterRegistration = filterRegistrations.get(filterName);
-        if(filterRegistrations.get(filterName) != null){
+        if (filterRegistrations.get(filterName) != null) {
             filterRegistrations.get(filterName).setClassName(filter.getClass().getName());
             filterRegistration.setFilter(filter);
             return filterRegistration;
@@ -422,7 +422,7 @@ public class JerryServletContext implements ServletContext {
     public <T extends Filter> T createFilter(Class<T> clazz) throws ServletException {
         T filter = null;
         try {
-            filter =  clazz.newInstance();
+            filter = clazz.newInstance();
         } catch (InstantiationException e) {
             LOG.error("Can' create com.rg.servlet.", e);
         } catch (IllegalAccessException e) {
@@ -456,13 +456,13 @@ public class JerryServletContext implements ServletContext {
     }
 
     public void addListener(String className) {
-        if(initialized){
+        if (initialized) {
             throw new IllegalStateException();
         }
 
         try {
             Class<EventListener> listenerClass = (Class<EventListener>) classLoader.loadClass(className);
-            if(! addListenerToSet(listenerClass.newInstance())){
+            if (!addListenerToSet(listenerClass.newInstance())) {
                 throw new IllegalArgumentException();
             }
         } catch (ClassNotFoundException e) {
@@ -475,22 +475,22 @@ public class JerryServletContext implements ServletContext {
     }
 
     public <T extends EventListener> void addListener(T t) {
-        if(initialized){
+        if (initialized) {
             throw new IllegalStateException();
         }
 
-        if(! addListenerToSet(t)){
+        if (!addListenerToSet(t)) {
             throw new IllegalArgumentException();
         }
     }
 
     public void addListener(Class<? extends EventListener> listenerClass) {
-        if(initialized){
+        if (initialized) {
             throw new IllegalStateException();
         }
 
         try {
-            if(! addListenerToSet(listenerClass.newInstance())){
+            if (!addListenerToSet(listenerClass.newInstance())) {
                 throw new IllegalArgumentException();
             }
         } catch (IllegalAccessException e) {
@@ -512,11 +512,11 @@ public class JerryServletContext implements ServletContext {
         return listener;
     }
 
-    public void addServletRegistration(JerryServletRegistration registration){
+    public void addServletRegistration(JerryServletRegistration registration) {
         servletRegistrations.put(registration.getName(), registration);
     }
 
-    public void addFilterRegistration(JerryFilterRegistration registration){
+    public void addFilterRegistration(JerryFilterRegistration registration) {
         filterRegistrations.put(registration.getName(), registration);
     }
 
@@ -592,86 +592,79 @@ public class JerryServletContext implements ServletContext {
         responseEncoding = encoding;
     }
 
-    private void check(String... params){
-        for(String param : params){
-            if(param == null) throw new IllegalArgumentException();
-            else if(param.isEmpty()) throw new IllegalArgumentException();
+    private void check(String... params) {
+        for (String param : params) {
+            if (param == null) throw new IllegalArgumentException();
+            else if (param.isEmpty()) throw new IllegalArgumentException();
         }
 
-        if(initialized) throw new IllegalStateException();
+        if (initialized) throw new IllegalStateException();
     }
 
     public void init() throws ClassNotFoundException, InstantiationException, ServletException, IllegalAccessException {
 
-        if(initialized){
+        if (initialized) {
             throw new IllegalStateException();
         }
 
-        for (ServletContextListener contextListener : servletContextListeners){
+        for (ServletContextListener contextListener : servletContextListeners) {
             contextListener.contextInitialized(new ServletContextEvent(this));
         }
 
-        for(JerryServletRegistration servletRegistration : servletRegistrations.values()){
+        for (JerryServletRegistration servletRegistration : servletRegistrations.values()) {
             servletRegistration.init(this);
         }
 
-        for(JerryFilterRegistration filterRegistration : filterRegistrations.values()){
+        for (JerryFilterRegistration filterRegistration : filterRegistrations.values()) {
             filterRegistration.init(this);
         }
 
         initialized = true;
     }
 
-    public void destroy(){
-        for (ServletContextListener contextListener : servletContextListeners){
+    public void destroy() {
+        for (ServletContextListener contextListener : servletContextListeners) {
             contextListener.contextDestroyed(new ServletContextEvent(this));
         }
     }
 
-    private boolean addListenerToSet(EventListener listener){
-            if (listener instanceof ServletRequestAttributeListener){
-                requestAttributeListeners.add((ServletRequestAttributeListener) listener);
-                return true;
-            }
-            else if(listener instanceof HttpSessionAttributeListener){
-                sessionAttributeListeners.add((HttpSessionAttributeListener) listener);
-                return true;
-            }
-            else if(listener instanceof HttpSessionBindingListener){
-                sessionBindingListeners.add((HttpSessionBindingListener) listener);
-                return true;
-            }
-            else if(listener instanceof HttpSessionActivationListener){
-                sessionActivationListeners.add((HttpSessionActivationListener) listener);
-                return true;
-            }
-            else if(listener instanceof ServletContextAttributeListener){
-                servletContextAttributeListeners.add((ServletContextAttributeListener) listener);
-                return true;
-            }
-            else if(listener instanceof ServletContextListener){
-                servletContextListeners.add((ServletContextListener) listener);
-                return true;
-            }
-            else if(listener instanceof HttpSessionListener){
-                sessionListeners.add((HttpSessionListener) listener);
-                return true;
-            }
-            else if(listener instanceof ServletRequestListener){
-                requestListeners.add((ServletRequestListener) listener);
-                return true;
-            }
-            return false;
+    private boolean addListenerToSet(EventListener listener) {
+        if (listener instanceof ServletRequestAttributeListener) {
+            requestAttributeListeners.add((ServletRequestAttributeListener) listener);
+            return true;
+        } else if (listener instanceof HttpSessionAttributeListener) {
+            sessionAttributeListeners.add((HttpSessionAttributeListener) listener);
+            return true;
+        } else if (listener instanceof HttpSessionBindingListener) {
+            sessionBindingListeners.add((HttpSessionBindingListener) listener);
+            return true;
+        } else if (listener instanceof HttpSessionActivationListener) {
+            sessionActivationListeners.add((HttpSessionActivationListener) listener);
+            return true;
+        } else if (listener instanceof ServletContextAttributeListener) {
+            servletContextAttributeListeners.add((ServletContextAttributeListener) listener);
+            return true;
+        } else if (listener instanceof ServletContextListener) {
+            servletContextListeners.add((ServletContextListener) listener);
+            return true;
+        } else if (listener instanceof HttpSessionListener) {
+            sessionListeners.add((HttpSessionListener) listener);
+            return true;
+        } else if (listener instanceof ServletRequestListener) {
+            requestListeners.add((ServletRequestListener) listener);
+            return true;
+        }
+        return false;
     }
 
-    public JerryHttpSession createSession(HttpResponse response){
+    public JerryHttpSession createSession(HttpResponse response) {
         JerryHttpSession session = new JerryHttpSession(this);
         session.setMaxInactiveInterval(sessionTimeout);
         sessions.put(session.getId(), session);
 
         response.setHeader("Set-Cookie", "JSESSIONID=" + session.getId());
 
-        for (HttpSessionListener listener : sessionListeners){
+        for (HttpSessionListener listener : sessionListeners) {
             listener.sessionCreated(new HttpSessionEvent(session));
         }
 
@@ -679,9 +672,9 @@ public class JerryServletContext implements ServletContext {
     }
 
 
-    public void changeSessionId(String sessionId){
+    public void changeSessionId(String sessionId) {
         JerryHttpSession session = sessions.get(sessionId);
-        if(session == null) {
+        if (session == null) {
             throw new IllegalStateException();
         }
         session.setId(UUID.randomUUID().toString());
@@ -689,15 +682,15 @@ public class JerryServletContext implements ServletContext {
         sessions.put(session.getId(), session);
     }
 
-    public void destroySession(String sessionId){
-        for (HttpSessionListener listener : sessionListeners){
+    public void destroySession(String sessionId) {
+        for (HttpSessionListener listener : sessionListeners) {
             listener.sessionDestroyed(new HttpSessionEvent(sessions.get(sessionId)));
         }
 
         sessions.remove(sessionId);
     }
 
-    public JerryHttpSession getSession(String sessionId){
+    public JerryHttpSession getSession(String sessionId) {
         return sessions.get(sessionId);
     }
 }

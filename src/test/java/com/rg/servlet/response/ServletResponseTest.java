@@ -1,7 +1,7 @@
-package com.rg.servlet;
+package com.rg.servlet.response;
 
 import com.rg.http.HttpParser;
-import com.rg.http.HttpResponseTest;
+import com.rg.http.io.HttpResponseTest;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

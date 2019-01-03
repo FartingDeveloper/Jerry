@@ -1,4 +1,4 @@
-package com.rg.servlet;
+package com.rg.servlet.registration;
 
 import com.sun.org.apache.bcel.internal.util.ClassLoader;
 import org.junit.Assert;

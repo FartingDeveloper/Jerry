@@ -19,7 +19,7 @@ import java.util.List;
 
 public class HttpRequestHandler implements RequestHandler {
 
-    private Logger LOG = LogManager.getLogger(HttpRequestHandler.class);
+    private static final Logger LOG = LogManager.getLogger(HttpRequestHandler.class);
 
     private JerryServletContext servletContext;
     private Servlet servlet;

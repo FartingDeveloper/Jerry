@@ -1,4 +1,4 @@
-package com.rg.http;
+package com.rg.http.core;
 
 import com.rg.http.core.HeaderElement;
 import org.junit.Assert;

@@ -39,29 +39,29 @@ public class JerryFilterRegistration extends JerryRegistration implements Filter
         return mappings;
     }
 
-    public EnumSet<DispatcherType> getDispatcherTypes(String mapping){
-        for(Set<String> set : dispatcherTypes.keySet()){
-            if(set.contains(mapping)){
+    public EnumSet<DispatcherType> getDispatcherTypes(String mapping) {
+        for (Set<String> set : dispatcherTypes.keySet()) {
+            if (set.contains(mapping)) {
                 return dispatcherTypes.get(set);
             }
         }
         return null;
     }
 
-    public EnumSet<DispatcherType> getDispatcherTypes(Set<String> mappings){
-        for (Set<String> set : dispatcherTypes.keySet()){
-            if(set.containsAll(mappings)){
+    public EnumSet<DispatcherType> getDispatcherTypes(Set<String> mappings) {
+        for (Set<String> set : dispatcherTypes.keySet()) {
+            if (set.containsAll(mappings)) {
                 return dispatcherTypes.get(set);
             }
         }
         return null;
     }
 
-    private void add(Set<String> set, EnumSet<DispatcherType> dispatcherTypes, boolean isMatchAfter, String... urls){
+    private void add(Set<String> set, EnumSet<DispatcherType> dispatcherTypes, boolean isMatchAfter, String... urls) {
         check(urls);
 
         Set<String> tmp = new HashSet<>();
-        for (String servletName : urls){
+        for (String servletName : urls) {
             tmp.add(servletName);
         }
 
@@ -78,13 +78,13 @@ public class JerryFilterRegistration extends JerryRegistration implements Filter
     }
 
     public void init(ServletContext context) throws InstantiationException, ClassNotFoundException, ServletException, IllegalAccessException {
-        if(initialized){
+        if (initialized) {
             throw new IllegalStateException();
         }
 
         initialized = true;
 
-        if(filter == null){
+        if (filter == null) {
             Class<Filter> clazz = (Class<Filter>) context.getClassLoader().loadClass(className);
             filter = clazz.newInstance();
         }
@@ -96,7 +96,7 @@ public class JerryFilterRegistration extends JerryRegistration implements Filter
 
         private ServletContext context;
 
-        public JerryFilterConfig(ServletContext context){
+        public JerryFilterConfig(ServletContext context) {
             this.context = context;
         }
 

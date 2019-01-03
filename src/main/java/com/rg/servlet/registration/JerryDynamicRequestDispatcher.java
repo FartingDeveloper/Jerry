@@ -7,7 +7,7 @@ public class JerryDynamicRequestDispatcher implements RequestDispatcher {
 
     private Servlet servlet;
 
-    public JerryDynamicRequestDispatcher(Servlet servlet){
+    public JerryDynamicRequestDispatcher(Servlet servlet) {
         this.servlet = servlet;
     }
 

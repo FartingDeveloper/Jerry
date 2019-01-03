@@ -1,4 +1,4 @@
-package com.rg.http;
+package com.rg.http.io;
 
 import com.rg.http.core.Header;
 import com.rg.http.io.HttpMessage;

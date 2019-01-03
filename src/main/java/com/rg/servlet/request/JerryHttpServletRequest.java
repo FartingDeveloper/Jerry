@@ -25,7 +25,7 @@ public class JerryHttpServletRequest extends JerryServletRequest implements Http
 
     private JerryHttpSession session;
 
-    public JerryHttpServletRequest(HttpRequest request, JerryHttpServletResponse response , JerryServletContext servletContext) {
+    public JerryHttpServletRequest(HttpRequest request, JerryHttpServletResponse response, JerryServletContext servletContext) {
         super(request, response, servletContext);
     }
 
@@ -37,7 +37,7 @@ public class JerryHttpServletRequest extends JerryServletRequest implements Http
     @Override
     public Cookie[] getCookies() {
         Header header = request.getHeader("Cookie");
-        if(header == null){
+        if (header == null) {
             return null;
         }
 
@@ -45,7 +45,7 @@ public class JerryHttpServletRequest extends JerryServletRequest implements Http
         Cookie[] cookies = new Cookie[elements.size()];
 
         int i = 0;
-        for(HeaderElement element : elements){
+        for (HeaderElement element : elements) {
             cookies[i++] = new Cookie(element.getName(), element.getValue());
         }
         return cookies;
@@ -66,7 +66,7 @@ public class JerryHttpServletRequest extends JerryServletRequest implements Http
     @Override
     public Enumeration<String> getHeaders(String name) {
         ArrayList<String> values = new ArrayList<>();
-        for(Header header : request.getHeaders()){
+        for (Header header : request.getHeaders()) {
             values.add(header.getValue());
         }
         return new JerryEnumeration<String>(values.iterator());
@@ -75,7 +75,7 @@ public class JerryHttpServletRequest extends JerryServletRequest implements Http
     @Override
     public Enumeration<String> getHeaderNames() {
         ArrayList<String> names = new ArrayList<>();
-        for(Header header : request.getHeaders()){
+        for (Header header : request.getHeaders()) {
             names.add(header.getName());
         }
         return new JerryEnumeration<String>(names.iterator());
@@ -84,7 +84,7 @@ public class JerryHttpServletRequest extends JerryServletRequest implements Http
     @Override
     public int getIntHeader(String name) {
         Header header = request.getHeader(name);
-        if(header == null){
+        if (header == null) {
             return 0;
         }
         return Integer.valueOf(header.getValue());
@@ -101,7 +101,7 @@ public class JerryHttpServletRequest extends JerryServletRequest implements Http
         int index = path.indexOf("/");
         path = path.substring(index + 1, path.length());
         index = path.indexOf("/");
-        if(index == -1){
+        if (index == -1) {
             return null;
         }
         return path.substring(index, path.length());
@@ -123,7 +123,7 @@ public class JerryHttpServletRequest extends JerryServletRequest implements Http
     public String getQueryString() {
         String uri = request.getRequestLine().getUri();
         int index = uri.indexOf(HTTP.PARAMS_START);
-        if(index == -1){
+        if (index == -1) {
             return null;
         }
         return uri.substring(index + 1, uri.length());
@@ -163,7 +163,7 @@ public class JerryHttpServletRequest extends JerryServletRequest implements Http
     @Override
     public String getServletPath() {
         String uri = getPath();
-        while (uri.indexOf("/") != uri.lastIndexOf("/")){
+        while (uri.indexOf("/") != uri.lastIndexOf("/")) {
             uri = uri.substring(0, uri.lastIndexOf("/"));
         }
         return uri;
@@ -171,7 +171,7 @@ public class JerryHttpServletRequest extends JerryServletRequest implements Http
 
     @Override
     public HttpSession getSession(boolean create) {
-        if(create && session == null){
+        if (create && session == null) {
             session = servletContext.createSession(servletResponse.getResponse());
         }
         return session;
@@ -183,7 +183,7 @@ public class JerryHttpServletRequest extends JerryServletRequest implements Http
 
     @Override
     public HttpSession getSession() {
-        if(session == null){
+        if (session == null) {
             session = servletContext.createSession(servletResponse.getResponse());
         }
         return session;
@@ -200,7 +200,7 @@ public class JerryHttpServletRequest extends JerryServletRequest implements Http
 
     @Override
     public boolean isRequestedSessionIdValid() {
-        if(session == null){
+        if (session == null) {
             return false;
         }
         return true;
@@ -208,8 +208,8 @@ public class JerryHttpServletRequest extends JerryServletRequest implements Http
 
     @Override
     public boolean isRequestedSessionIdFromCookie() {
-        for(HeaderElement element : request.getHeader("Cookie").getElements()){
-            if(element.getName().equals("JSESSIONID")){
+        for (HeaderElement element : request.getHeader("Cookie").getElements()) {
+            if (element.getName().equals("JSESSIONID")) {
                 return true;
             }
         }

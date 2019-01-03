@@ -1,11 +1,10 @@
-package com.rg.servlet;
+package com.rg.servlet.registration;
 
 import com.sun.org.apache.bcel.internal.util.ClassLoader;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import com.rg.servlet.registration.JerryServletRegistration;
 
 import javax.servlet.*;
 import java.util.Collection;

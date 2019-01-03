@@ -1,10 +1,9 @@
-package com.rg.servlet;
+package com.rg.servlet.request;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import com.rg.servlet.context.JerryServletContext;
-import com.rg.servlet.request.JerryHttpServletRequest;
 import com.rg.servlet.response.JerryHttpServletResponse;
 
 import javax.servlet.http.Cookie;

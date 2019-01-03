@@ -1,6 +1,6 @@
 package com.rg.servlet;
 
-import com.rg.loader.XmlContextContextLoader;
+import com.rg.loader.xml.XmlContextLoader;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -16,15 +16,15 @@ public class XmlContextLoaderTest {
 
     @BeforeClass
     public static void initClass() throws URISyntaxException, ClassNotFoundException, InstantiationException, ServletException, IllegalAccessException {
-        System.out.println(XmlContextContextLoader.class
+        System.out.println(XmlContextLoader.class
                 .getClassLoader().getResource("webapps").getPath());
 
 
-        String path = XmlContextContextLoader.class
+        String path = XmlContextLoader.class
                 .getClassLoader().getResource("webapps").toURI().getPath();
         System.out.println(path);
 
-        contexts = new XmlContextContextLoader().load("target/test-classes");
+        contexts = new XmlContextLoader().load("target/test-classes");
     }
 
     @Test

@@ -10,12 +10,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class HttpRequest extends HttpMessage{
+public class HttpRequest extends HttpMessage {
 
     private RequestLine requestLine;
     private Map<String, String[]> requestParams = new HashMap<>();
 
-    public HttpRequest(RequestLine line, List<Header> headers){
+    public HttpRequest(RequestLine line, List<Header> headers) {
         super(headers);
 
         this.requestLine = line;
@@ -23,12 +23,12 @@ public class HttpRequest extends HttpMessage{
         String uri = requestLine.getUri();
         int paramsIndex = uri.indexOf(HTTP.PARAMS_START);
 
-        if(paramsIndex != -1){
+        if (paramsIndex != -1) {
             collectRequestParams(uri.substring(paramsIndex + 1, uri.length()));
         }
     }
 
-    public HttpRequest(RequestLine line, List<Header> headers, String content){
+    public HttpRequest(RequestLine line, List<Header> headers, String content) {
         super(headers, content);
         this.requestLine = line;
     }
@@ -37,27 +37,27 @@ public class HttpRequest extends HttpMessage{
         return requestLine;
     }
 
-    public InputStream getContentInputStream(){
-        if(content == null){
+    public InputStream getContentInputStream() {
+        if (content == null) {
             return new ByteArrayInputStream(new byte[0]);
         }
         return new ByteArrayInputStream(getContent().getBytes());
     }
 
-    public String getRequestParameterByName(String name){
-        if(requestParams.get(name) != null){
+    public String getRequestParameterByName(String name) {
+        if (requestParams.get(name) != null) {
             return requestParams.get(name)[0];
         }
         return null;
     }
 
-    public Map<String, String[]> getRequestParameters(){
+    public Map<String, String[]> getRequestParameters() {
         return requestParams;
     }
 
-    private void collectRequestParams(String line){
+    private void collectRequestParams(String line) {
         int index = line.indexOf(HTTP.PARAMS_SEPARATOR);
-        if(index != -1){
+        if (index != -1) {
             collectRequestParams(line.substring(index + 1, line.length()));
             line = line.substring(0, index);
         }
@@ -66,13 +66,13 @@ public class HttpRequest extends HttpMessage{
         String name = line.substring(0, equalityIndex);
         String value = line.substring(equalityIndex + 1, line.length());
 
-        if(requestParams.containsKey(name)){
+        if (requestParams.containsKey(name)) {
             String[] arr = requestParams.get(name);
             String[] newArr = Arrays.copyOf(arr, arr.length + 1);
             newArr[newArr.length - 1] = name;
 
             requestParams.put(name, newArr);
-        } else{
+        } else {
             requestParams.put(name, new String[]{value});
         }
     }
@@ -80,7 +80,7 @@ public class HttpRequest extends HttpMessage{
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder(requestLine.toString() + "\r\n");
-        for (Header header : headers){
+        for (Header header : headers) {
             builder.append(header.toString() + "\r\n");
         }
         return builder.toString();

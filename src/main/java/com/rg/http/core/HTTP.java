@@ -14,10 +14,10 @@ public class HTTP {
     public static final String SP = " ";
     public static final String URL_SEPARATOR = "/";
 
-    public static int getIndex(String parameter, String character){
+    public static int getIndex(String parameter, String character) {
         Pattern pattern = Pattern.compile("[^ \\( \\[ \\{]+" + character + "[^ \\) \\] \\}]+");
         Matcher matcher = pattern.matcher(parameter);
-        if (matcher.find()){
+        if (matcher.find()) {
             int start = matcher.start();
             return parameter.indexOf(character, start);
         }

@@ -16,13 +16,13 @@ public abstract class JerryRegistration implements Registration.Dynamic {
 
     protected boolean initialized;
 
-    public JerryRegistration(String name, String className){
+    public JerryRegistration(String name, String className) {
         this.name = name;
         this.className = className;
         initParameters = new HashMap<>();
     }
 
-    public JerryRegistration(String name, String className, Map<String, String> initParameters){
+    public JerryRegistration(String name, String className, Map<String, String> initParameters) {
         this(name, className);
         this.initParameters = initParameters;
     }
@@ -55,7 +55,7 @@ public abstract class JerryRegistration implements Registration.Dynamic {
     public Set<String> setInitParameters(Map<String, String> initParameters) {
         checkInitParams(initParameters.keySet(), initParameters.values());
 
-        for (String name : initParameters.keySet()){
+        for (String name : initParameters.keySet()) {
             check(name, initParameters.get(name));
         }
 
@@ -68,22 +68,22 @@ public abstract class JerryRegistration implements Registration.Dynamic {
         return initParameters;
     }
 
-    private void checkInitParams(Object... obj){
+    private void checkInitParams(Object... obj) {
 
-        for (int i = 0; i < obj.length; i++){
-            if(obj[i] == null) throw new IllegalArgumentException();
+        for (int i = 0; i < obj.length; i++) {
+            if (obj[i] == null) throw new IllegalArgumentException();
         }
 
-        if(initialized) throw new IllegalStateException();
+        if (initialized) throw new IllegalStateException();
     }
 
     protected void check(String... str) {
-        for (int i = 0; i < str.length; i++){
-            if(str[i] == null) throw new IllegalArgumentException();
-            if(str[i].isEmpty()) throw new IllegalArgumentException();
+        for (int i = 0; i < str.length; i++) {
+            if (str[i] == null) throw new IllegalArgumentException();
+            if (str[i].isEmpty()) throw new IllegalArgumentException();
         }
 
-        if(initialized) throw new IllegalStateException();
+        if (initialized) throw new IllegalStateException();
     }
 
     public void setName(String name) {

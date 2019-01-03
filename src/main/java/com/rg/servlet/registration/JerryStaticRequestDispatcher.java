@@ -12,7 +12,7 @@ public class JerryStaticRequestDispatcher implements RequestDispatcher {
 
     private URL resource;
 
-    public JerryStaticRequestDispatcher(URL resource){
+    public JerryStaticRequestDispatcher(URL resource) {
         this.resource = resource;
     }
 

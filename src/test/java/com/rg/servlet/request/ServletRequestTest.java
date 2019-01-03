@@ -1,4 +1,4 @@
-package com.rg.servlet;
+package com.rg.servlet.request;
 
 import com.rg.http.core.Header;
 import com.rg.http.io.HttpRequest;

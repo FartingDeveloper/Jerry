@@ -1,5 +1,6 @@
-package com.rg.servlet;
+package com.rg.servlet.context;
 
+import com.rg.servlet.XmlContextLoaderTest;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

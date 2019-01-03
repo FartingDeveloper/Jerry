@@ -7,7 +7,7 @@ public class JerryEnumeration<T> implements Enumeration<T> {
 
     private Iterator<T> iterator;
 
-    public JerryEnumeration(){
+    public JerryEnumeration() {
         this.iterator = new Iterator<T>() {
             @Override
             public boolean hasNext() {

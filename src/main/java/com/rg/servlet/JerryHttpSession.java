@@ -23,7 +23,7 @@ public class JerryHttpSession implements HttpSession {
     private Set<HttpSessionAttributeListener> sessionAttributeListeners;
     private Set<HttpSessionBindingListener> sessionBindingListeners;
 
-    public JerryHttpSession(JerryServletContext context){
+    public JerryHttpSession(JerryServletContext context) {
         servletContext = context;
         sessionAttributeListeners = context.getSessionAttributeListeners();
         sessionBindingListeners = context.getSessionBindingListeners();
@@ -89,21 +89,21 @@ public class JerryHttpSession implements HttpSession {
 
     @Override
     public void setAttribute(String name, Object value) {
-        if(value == null){
+        if (value == null) {
             removeAttribute(name);
         }
 
-        if(attributes.containsKey(name)){
-            for (HttpSessionAttributeListener listener : sessionAttributeListeners){
+        if (attributes.containsKey(name)) {
+            for (HttpSessionAttributeListener listener : sessionAttributeListeners) {
                 listener.attributeAdded(new HttpSessionBindingEvent(this, name, value));
             }
-        } else{
-            for (HttpSessionAttributeListener listener : sessionAttributeListeners){
+        } else {
+            for (HttpSessionAttributeListener listener : sessionAttributeListeners) {
                 listener.attributeReplaced(new HttpSessionBindingEvent(this, name, value));
             }
         }
 
-        for (HttpSessionBindingListener listener : sessionBindingListeners){
+        for (HttpSessionBindingListener listener : sessionBindingListeners) {
             listener.valueBound(new HttpSessionBindingEvent(this, name, value));
         }
 
@@ -117,10 +117,10 @@ public class JerryHttpSession implements HttpSession {
 
     @Override
     public void removeAttribute(String name) {
-        for (HttpSessionAttributeListener listener : sessionAttributeListeners){
+        for (HttpSessionAttributeListener listener : sessionAttributeListeners) {
             listener.attributeRemoved(new HttpSessionBindingEvent(this, name));
         }
-        for (HttpSessionBindingListener listener : sessionBindingListeners){
+        for (HttpSessionBindingListener listener : sessionBindingListeners) {
             listener.valueUnbound(new HttpSessionBindingEvent(this, name));
         }
         attributes.remove(name);
@@ -139,7 +139,7 @@ public class JerryHttpSession implements HttpSession {
 
     @Override
     public boolean isNew() {
-        if(invalidate){
+        if (invalidate) {
             throw new IllegalStateException();
         }
         return status;

@@ -20,9 +20,9 @@ public class JerryServletInputStream extends ServletInputStream {
 
     public int readLine(byte[] b, int off, int len) throws IOException {
         int result = super.readLine(b, off, len);
-        if(result == -1){
+        if (result == -1) {
             finished = true;
-            if(readListener != null){
+            if (readListener != null) {
                 readListener.onAllDataRead();
             }
         }
@@ -36,9 +36,9 @@ public class JerryServletInputStream extends ServletInputStream {
 
     @Override
     public boolean isReady() {
-        try{
-            if(inputStream.available() > 0){
-                if(readListener != null){
+        try {
+            if (inputStream.available() > 0) {
+                if (readListener != null) {
                     readListener.onDataAvailable();
                 }
                 return true;
@@ -56,7 +56,7 @@ public class JerryServletInputStream extends ServletInputStream {
 
     @Override
     public int read() throws IOException {
-        if(readListener != null){
+        if (readListener != null) {
             readListener.onDataAvailable();
         }
         return inputStream.read();

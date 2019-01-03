@@ -10,7 +10,7 @@ public class JerryFilterChain implements FilterChain {
     private List<Filter> filters;
     private int index;
 
-    public JerryFilterChain(Servlet servlet, List<Filter> filters){
+    public JerryFilterChain(Servlet servlet, List<Filter> filters) {
         this.servlet = servlet;
         this.filters = filters;
         index = 0;
@@ -18,13 +18,11 @@ public class JerryFilterChain implements FilterChain {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response) throws IOException, ServletException {
-        if(index < filters.size()){
+        if (index < filters.size()) {
             filters.get(index++).doFilter(request, response, this);
-        }
-        else if(index == filters.size()){
+        } else if (index == filters.size()) {
             servlet.service(request, response);
-        }
-        else{
+        } else {
             throw new ServletException();
         }
     }
