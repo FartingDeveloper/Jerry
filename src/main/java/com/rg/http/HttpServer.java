@@ -41,6 +41,7 @@ public class HttpServer extends Thread {
                         RequestHandler handler = services.get(uri);
                         if (handler != null) {
                             handler.handle(request, response);
+                            response.setStatus(HttpServletResponse.SC_NOT_FOUND, "OK");
                         } else {
                             response.setStatus(HttpServletResponse.SC_NOT_FOUND, "NOT FOUND");
                         }

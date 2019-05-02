@@ -5,11 +5,13 @@ import com.rg.http.core.Header;
 import com.rg.http.core.HeaderElement;
 import com.rg.http.io.HttpResponse;
 import com.rg.servlet.io.JerryServletOutputStream;
+import com.rg.servlet.io.JerryServletWriter;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.ServletResponse;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.Locale;
@@ -29,7 +31,7 @@ public class JerryServletResponse implements ServletResponse {
         this.response = response;
         this.servletContext = servletContext;
         contentOutputStream = new JerryServletOutputStream(response);
-        contentWriter = new PrintWriter(contentOutputStream);
+        contentWriter = new PrintWriter(new JerryServletWriter(contentOutputStream));
     }
 
     @Override
@@ -43,7 +45,7 @@ public class JerryServletResponse implements ServletResponse {
                 }
             }
         }
-        return null;
+        return "ISO-8859-1";
     }
 
     @Override

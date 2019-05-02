@@ -46,7 +46,7 @@ public class HttpResponseTest{
         serverSocket = new ServerSocket(8080);
 
         new Thread(()-> {
-            System.setProperty("webdriver.chrome.driver", new File("src/test/resources/chromedriver.exe")
+            System.setProperty("webdriver.chrome.driver", new File("src/test/resources/driver/chromedriver")
                     .getAbsolutePath());
             ChromeOptions option = new ChromeOptions();
             option.addArguments("--proxy-server=com.rg.config.http://" + PROXY);

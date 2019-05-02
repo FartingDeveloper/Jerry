@@ -16,7 +16,7 @@ public class HttpResponse extends HttpMessage {
     private String protocolVersion;
 
     private String status;
-    private int statusCode = HttpServletResponse.SC_FOUND;
+    private int statusCode = HttpServletResponse.SC_OK;
 
     private OutputStream outputStream;
     private ByteArrayOutputStream contentOutputStream;
@@ -30,7 +30,7 @@ public class HttpResponse extends HttpMessage {
     public HttpResponse(OutputStream outputStream, String protocolVersion, List<Header> headers) {
         super(headers);
 
-        this.outputStream = new BufferedOutputStream(outputStream);
+        this.outputStream = outputStream;
         this.protocolVersion = protocolVersion;
         this.contentOutputStream = new ByteArrayOutputStream();
     }

@@ -21,7 +21,7 @@ public class JerryServletOutputStream extends ServletOutputStream {
         this.response = response;
         bufferSize = 1024;
         bufferIndex = 0;
-        buffer = new byte[1024];
+        buffer = new byte[bufferSize];
     }
 
     @Override
